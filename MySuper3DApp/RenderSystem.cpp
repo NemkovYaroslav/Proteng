@@ -10,7 +10,6 @@
 
 RenderSystem::RenderSystem()
 {
-	//FRAME
 	D3D_FEATURE_LEVEL featureLevel[] = { D3D_FEATURE_LEVEL_11_1 }; //ok
 	DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
 	swapChainDesc.BufferCount = 2;
@@ -48,7 +47,7 @@ RenderSystem::RenderSystem()
 	result = device->CreateRenderTargetView(backBuffer.Get(), nullptr, &renderView);
 	assert(SUCCEEDED(result));
 
-	D3D11_TEXTURE2D_DESC depthTexDesc = {}; //ok
+	D3D11_TEXTURE2D_DESC depthTexDesc = {};
 	depthTexDesc.ArraySize = 1;
 	depthTexDesc.MipLevels = 1;
 	depthTexDesc.Format = DXGI_FORMAT_D32_FLOAT;
@@ -64,14 +63,14 @@ RenderSystem::RenderSystem()
 	result = device->CreateDepthStencilView(depthBuffer.Get(), nullptr, &depthView);
 	assert(SUCCEEDED(result));
 
-	D3D11_BLEND_DESC BlendStateOpaqueDesc; /// 
+	D3D11_BLEND_DESC BlendStateOpaqueDesc;
 	ZeroMemory(&BlendStateOpaqueDesc, sizeof(D3D11_BLEND_DESC));
 	BlendStateOpaqueDesc.RenderTarget[0].BlendEnable           = FALSE;
 	BlendStateOpaqueDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	BlendStateOpaqueDesc.IndependentBlendEnable                = false;
 	device->CreateBlendState(&BlendStateOpaqueDesc, &blendStateOpaque);
 
-	D3D11_BLEND_DESC BlendStateLightDesc; ///
+	D3D11_BLEND_DESC BlendStateLightDesc;
 	ZeroMemory(&BlendStateLightDesc, sizeof(D3D11_BLEND_DESC));
 	BlendStateLightDesc.RenderTarget[0].BlendEnable           = TRUE;
 	BlendStateLightDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
@@ -84,19 +83,19 @@ RenderSystem::RenderSystem()
 	BlendStateLightDesc.IndependentBlendEnable                = false;
 	device->CreateBlendState(&BlendStateLightDesc, &blendStateLight);
 
-	D3D11_DEPTH_STENCIL_DESC dsDesc = {};        ///
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
 	dsDesc.DepthEnable = TRUE;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
 	result = device->CreateDepthStencilState(&dsDesc, &dsOpaque);
 
-	D3D11_DEPTH_STENCIL_DESC dsDescLess = {};    ///
+	D3D11_DEPTH_STENCIL_DESC dsDescLess = {};
 	dsDescLess.DepthEnable    = TRUE;
 	dsDescLess.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	dsDescLess.DepthFunc      = D3D11_COMPARISON_LESS_EQUAL;
 	result = device->CreateDepthStencilState(&dsDescLess, &dsLightingLess);
 
-	D3D11_DEPTH_STENCIL_DESC dsDescGreater = {}; ///
+	D3D11_DEPTH_STENCIL_DESC dsDescGreater = {};
 	dsDescLess.DepthEnable    = TRUE;
 	dsDescLess.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	dsDescLess.DepthFunc      = D3D11_COMPARISON_GREATER_EQUAL;
@@ -117,20 +116,19 @@ RenderSystem::RenderSystem()
 	viewport->MaxDepth = 1.0f;
 
 	//SHADERS
-	//InitializeShader("../Shaders/LightShader.hlsl");
 
 	InitializeOpaqueShader("../Shaders/DeferredShader.hlsl");
 	InitializeLightingShader("../Shaders/DeferredLighting.hlsl");
 	InitializeLightingShaderPoi("../Shaders/DeferredLightingPoi.hlsl");
 
 	//RASTERIZERS
-	CD3D11_RASTERIZER_DESC rastCullBackDesc = {}; ///
+	CD3D11_RASTERIZER_DESC rastCullBackDesc = {};
 	rastCullBackDesc.CullMode = D3D11_CULL_BACK;
 	rastCullBackDesc.FillMode = D3D11_FILL_SOLID;
 	result = device->CreateRasterizerState(&rastCullBackDesc, &rastCullBack);
 	assert(SUCCEEDED(result));
 
-	CD3D11_RASTERIZER_DESC rastCullFrontDesc = {}; ///
+	CD3D11_RASTERIZER_DESC rastCullFrontDesc = {};
 	rastCullFrontDesc.CullMode = D3D11_CULL_FRONT;
 	rastCullFrontDesc.FillMode = D3D11_FILL_SOLID;
 	result = device->CreateRasterizerState(&rastCullFrontDesc, &rastCullFront);
@@ -145,109 +143,6 @@ RenderSystem::RenderSystem()
 	result = device->CreateSamplerState(&samplerStateDesc, samplerState.GetAddressOf());
 	assert(SUCCEEDED(result));
 }
-
-/*
-void RenderSystem::InitializeShader(std::string shaderFileName)
-{
-	std::wstring fileName(shaderFileName.begin(), shaderFileName.end());
-	ID3DBlob* errorCode = nullptr;
-	Microsoft::WRL::ComPtr<ID3DBlob> vertexShaderByteCode;
-	auto result = D3DCompileFromFile(
-		fileName.c_str(),
-		nullptr,
-		nullptr,
-		"VSMain",
-		"vs_5_0",
-		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
-		0,
-		vertexShaderByteCode.GetAddressOf(),
-		&errorCode
-	);
-	if (FAILED(result))
-	{
-		if (errorCode)
-		{
-			const char* compileErrors = (char*)(errorCode->GetBufferPointer());
-			std::cout << compileErrors << std::endl;
-		}
-		else
-		{
-			std::cout << "Missing Shader File: " << shaderFileName << std::endl;
-		}
-		return;
-	}
-	result = device->CreateVertexShader(
-		vertexShaderByteCode->GetBufferPointer(),
-		vertexShaderByteCode->GetBufferSize(),
-		nullptr, vertexShader.GetAddressOf()
-	);
-	assert(SUCCEEDED(result));
-
-	Microsoft::WRL::ComPtr<ID3DBlob> pixelShaderByteCode;
-	result = D3DCompileFromFile(
-		fileName.c_str(),
-		nullptr,
-		nullptr,
-		"PSMain",
-		"ps_5_0",
-		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
-		0,
-		pixelShaderByteCode.GetAddressOf(),
-		&errorCode
-	);
-	assert(SUCCEEDED(result));
-	result = device->CreatePixelShader(
-		pixelShaderByteCode->GetBufferPointer(),
-		pixelShaderByteCode->GetBufferSize(),
-		nullptr, pixelShader.GetAddressOf()
-	);
-	assert(SUCCEEDED(result));
-
-	D3D11_INPUT_ELEMENT_DESC inputElements[] = {
-		D3D11_INPUT_ELEMENT_DESC {
-			"POSITION",
-			0,
-			DXGI_FORMAT_R32G32B32A32_FLOAT,
-			0,
-			0,
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0
-		},
-		D3D11_INPUT_ELEMENT_DESC {
-			"TEXCOORD",
-			0,
-			DXGI_FORMAT_R32G32B32A32_FLOAT,
-			0,
-			D3D11_APPEND_ALIGNED_ELEMENT,
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0
-		},
-		D3D11_INPUT_ELEMENT_DESC {
-			"NORMAL",
-			0,
-			DXGI_FORMAT_R32G32B32A32_FLOAT,
-			0,
-			D3D11_APPEND_ALIGNED_ELEMENT,
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0
-		}
-	};
-	result = device->CreateInputLayout(
-		inputElements,
-		3,
-		vertexShaderByteCode->GetBufferPointer(),
-		vertexShaderByteCode->GetBufferSize(),
-		inputLayout.GetAddressOf()
-	);
-	assert(SUCCEEDED(result));
-
-	CD3D11_RASTERIZER_DESC rastDesc = {};
-	rastDesc.CullMode = D3D11_CULL_FRONT;
-	rastDesc.FillMode = D3D11_FILL_SOLID;
-	result = device->CreateRasterizerState(&rastDesc, rastState.GetAddressOf());
-	assert(SUCCEEDED(result));
-}
-*/
 
 void RenderSystem::InitializeOpaqueShader(std::string shaderFileName)
 {
@@ -504,20 +399,12 @@ void RenderSystem::InitializeLightingShaderPoi(std::string shaderFileName)
 	assert(SUCCEEDED(result));
 }
 
-void RenderSystem::PrepareFrame()
-{
-	//context->ClearState();
-	//context->OMSetRenderTargets(1, renderView.GetAddressOf(), depthView.Get());
-	//context->RSSetViewports(1, viewport.get());
-	//float backgroundColor[] = { 0.2f, 0.2f, 0.2f };
-	//context->ClearRenderTargetView(renderView.Get(), backgroundColor);
-	//context->ClearDepthStencilView(depthView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-}
+void RenderSystem::PrepareFrame() {}
 
 void RenderSystem::Draw()
 {
 	context->ClearState();
-	context->RSSetViewports(1, viewport.get()); //-//
+	context->RSSetViewports(1, viewport.get());
 	context->ClearRenderTargetView(gBuffer->diffuseRTV,       Color(0.0f, 0.0f, 0.0f, 1.0f));
 	context->ClearRenderTargetView(gBuffer->normalRTV,        Color(0.0f, 0.0f, 0.0f, 1.0f));
 	context->ClearRenderTargetView(gBuffer->worldPositionRTV, Color(0.0f, 0.0f, 0.0f, 1.0f));

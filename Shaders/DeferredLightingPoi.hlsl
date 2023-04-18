@@ -13,8 +13,8 @@ struct PointLightData
 {
     row_major matrix model;
     float3           lightColor;
-    float4           constLinearQuadCount;
     float3           position;
+    float4           sphereRadius;
 };
 cbuffer LightConstantBuffer : register(b1)
 {
@@ -64,7 +64,6 @@ float4 PSMain(PS_IN input) : SV_Target
 {   
     GBufferData gBuffer = ReadGBuffer(input.pos.xy);
 
-    ///*
     float3 diffValue = gBuffer.DiffuseSpec.rgb;
     float3 normal    = gBuffer.Normal;
     float3 viewDir   = normalize(curCamera.position - gBuffer.WorldPos);
@@ -75,17 +74,14 @@ float4 PSMain(PS_IN input) : SV_Target
     float  spec       = pow(max(dot(viewDir, reflectDir), 0.0f), 128);
     
     float  distance    = length(poiLight.position - gBuffer.WorldPos);
-    if (distance > 3.0f)
+    if (distance > poiLight.sphereRadius.x)
     {
         discard;
     }
-    float  attenuation = max(1.0f - distance / 3.0f, 0.0f);
+    float attenuation = max(1.0f - distance / poiLight.sphereRadius.x, 0.0f);
     attenuation *= attenuation;
-    float3 diffuse  = attenuation * poiLight.lightColor * diffValue * diff * 3.0f;
-    float3 specular = attenuation * poiLight.lightColor * diffValue * spec * 3.0f;
+    float3 diffuse  = poiLight.lightColor * diffValue * diff * 2.5f;
+    float3 specular = poiLight.lightColor * diffValue * spec * 2.5f;
     
-    return float4(float3(diffuse + specular), 0.0f);
-    //*/
-
-    //return float4(poiLight.lightColor, 0.0f);
+    return float4(float3(diffuse + specular) * attenuation, 0.0f);
 }

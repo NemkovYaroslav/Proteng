@@ -17,20 +17,15 @@ struct PointLightData
 {
 	Matrix  poiModel;
 	Vector4 poiLightColor;
-	Vector4 poiConstLinearQuadCount;
 	Vector4 poiPosition;
+	Vector4 poiParams;
 };
 struct alignas(16) LightData
 {
 	PointLightData PoiLight;
 };
 
-PointLightComponent::PointLightComponent(float constant, float linear, float quadratic)
-{
-	this->constant  = constant;
-	this->linear    = linear;
-	this->quadratic = quadratic;
-}
+PointLightComponent::PointLightComponent(float constant, float linear, float quadratic) {}
 
 void PointLightComponent::Initialize()
 {
@@ -61,8 +56,6 @@ void PointLightComponent::Initialize()
 	indexData.SysMemSlicePitch = 0;
 	result = Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&indexBufDesc, &indexData, poiIndexBuffer.GetAddressOf());
 	assert(SUCCEEDED(result));
-	
-	std::cout << "!!!!!!!!!!!!!!!!" << std::endl;
 
 	constBuffer = new ID3D11Buffer * [2];
 
@@ -104,15 +97,13 @@ void PointLightComponent::Draw()
 	{
 		gameObject->transformComponent->GetModel(),
 		lightColor,
-		Vector4(1.0f, 0.09f, 0.032f, 1.0f),
 		Vector4(gameObject->transformComponent->GetPosition()),
+		Vector4(sphereRadius)
 	};
 	D3D11_MAPPED_SUBRESOURCE secondMappedResource;
 	Game::GetInstance()->GetRenderSystem()->context->Map(constBuffer[1], 0, D3D11_MAP_WRITE_DISCARD, 0, &secondMappedResource);
 	memcpy(secondMappedResource.pData, &lightData, sizeof(LightData));
 	Game::GetInstance()->GetRenderSystem()->context->Unmap(constBuffer[1], 0);
-
-	///
 
 	ID3D11ShaderResourceView* resources[] = {
 		Game::GetInstance()->GetRenderSystem()->gBuffer->diffuseSRV,
@@ -121,25 +112,23 @@ void PointLightComponent::Draw()
 	};
 	Game::GetInstance()->GetRenderSystem()->context->PSSetShaderResources(0, 3, resources);
 
-	//POINT
-	Game::GetInstance()->GetRenderSystem()->context->RSSetState(Game::GetInstance()->GetRenderSystem()->rastCullFront);                     //-//
-	Game::GetInstance()->GetRenderSystem()->context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);                          //-//
-	Game::GetInstance()->GetRenderSystem()->context->OMSetDepthStencilState(Game::GetInstance()->GetRenderSystem()->dsLightingGreater, 0); //-//
+	Game::GetInstance()->GetRenderSystem()->context->RSSetState(Game::GetInstance()->GetRenderSystem()->rastCullFront);
+	Game::GetInstance()->GetRenderSystem()->context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); 
+	Game::GetInstance()->GetRenderSystem()->context->OMSetDepthStencilState(Game::GetInstance()->GetRenderSystem()->dsLightingGreater, 0);
 
 	UINT strides[] { 16 };
 	UINT offsets[] { 0 };
-	Game::GetInstance()->GetRenderSystem()->context->IASetVertexBuffers(0, 1, poiVertexBuffer.GetAddressOf(), strides, offsets); //-//
-	Game::GetInstance()->GetRenderSystem()->context->IASetInputLayout(Game::GetInstance()->GetRenderSystem()->layoutLightingPoi); //-//
-	Game::GetInstance()->GetRenderSystem()->context->IASetIndexBuffer(poiIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0); //-//
+	Game::GetInstance()->GetRenderSystem()->context->IASetVertexBuffers(0, 1, poiVertexBuffer.GetAddressOf(), strides, offsets);
+	Game::GetInstance()->GetRenderSystem()->context->IASetInputLayout(Game::GetInstance()->GetRenderSystem()->layoutLightingPoi);
+	Game::GetInstance()->GetRenderSystem()->context->IASetIndexBuffer(poiIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 
-	Game::GetInstance()->GetRenderSystem()->context->VSSetShader(Game::GetInstance()->GetRenderSystem()->vsLightingPoi, nullptr, 0); //-//
-	Game::GetInstance()->GetRenderSystem()->context->PSSetShader(Game::GetInstance()->GetRenderSystem()->psLightingPoi, nullptr, 0); //-//
-	//Game::GetInstance()->GetRenderSystem()->context->GSSetShader(nullptr, nullptr, 0);
+	Game::GetInstance()->GetRenderSystem()->context->VSSetShader(Game::GetInstance()->GetRenderSystem()->vsLightingPoi, nullptr, 0);
+	Game::GetInstance()->GetRenderSystem()->context->PSSetShader(Game::GetInstance()->GetRenderSystem()->psLightingPoi, nullptr, 0);
 
-	Game::GetInstance()->GetRenderSystem()->context->VSSetConstantBuffers(0, 2, constBuffer); //-//
-	Game::GetInstance()->GetRenderSystem()->context->PSSetConstantBuffers(0, 2, constBuffer); //-//
+	Game::GetInstance()->GetRenderSystem()->context->VSSetConstantBuffers(0, 2, constBuffer);
+	Game::GetInstance()->GetRenderSystem()->context->PSSetConstantBuffers(0, 2, constBuffer);
 
-	Game::GetInstance()->GetRenderSystem()->context->DrawIndexed(poiIndices.size(), 0, 0); //-//
+	Game::GetInstance()->GetRenderSystem()->context->DrawIndexed(poiIndices.size(), 0, 0);
 }
 
 void PointLightComponent::PoiAddMesh(float sphereRadius, std::string objectFileName)

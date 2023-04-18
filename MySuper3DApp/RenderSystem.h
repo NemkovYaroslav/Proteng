@@ -18,8 +18,6 @@ public:
 	void Draw();
 	void EndFrame();
 
-	//void InitializeShader(std::string shaderFileName);
-
 	void InitializeOpaqueShader(std::string shaderFileName);
 	void InitializeLightingShader(std::string shaderFileName);
 	void InitializeLightingShaderPoi(std::string shaderFileName);
@@ -39,29 +37,35 @@ public:
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rastState;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState>    samplerState;
 
-	ID3D11BlendState* blendStateOpaque; ///
-	ID3D11BlendState* blendStateLight;  ///
+	ID3D11BlendState* blendStateOpaque;
+	ID3D11BlendState* blendStateLight;
 
-	ID3D11DepthStencilState* dsOpaque;          ///
-	ID3D11DepthStencilState* dsLightingLess;    ///
-	ID3D11DepthStencilState* dsLightingGreater; ///
+	ID3D11DepthStencilState* dsOpaque;
+	ID3D11DepthStencilState* dsLightingLess;
+	ID3D11DepthStencilState* dsLightingGreater;
 
-	ID3D11DepthStencilState* dsDirLight; ///
+	ID3D11DepthStencilState* dsDirLight;
 
-	ID3D11RasterizerState* rastCullBack;  ///
-	ID3D11RasterizerState* rastCullFront; ///
+	ID3D11RasterizerState* rastCullBack;
+	ID3D11RasterizerState* rastCullFront;
 
-	GBuffer* gBuffer; ///
+	GBuffer* gBuffer;
 
-	ID3D11InputLayout*  layoutOpaque;   ///
-	ID3D11InputLayout*  layoutLighting; ///
-	ID3D11InputLayout*  layoutLightingPoi; ///
-	ID3D11VertexShader* vsOpaque;       ///
-	ID3D11VertexShader* vsLighting;     ///
-	ID3D11VertexShader* vsLightingPoi;     ///
-	ID3D11PixelShader*  psOpaque;       ///
-	ID3D11PixelShader*  psLighting;     ///
-	ID3D11PixelShader*  psLightingPoi;     ///
+	ID3D11InputLayout*  layoutOpaque;
+	ID3D11InputLayout*  layoutLighting;
+	ID3D11InputLayout*  layoutLightingPoi;
+	ID3D11VertexShader* vsOpaque;
+	ID3D11VertexShader* vsLighting;
+	ID3D11VertexShader* vsLightingPoi;
+	ID3D11PixelShader*  psOpaque;
+	ID3D11PixelShader*  psLighting;
+	ID3D11PixelShader*  psLightingPoi;
+
+	// FLAGS
+
+
+
+	//
 
 	std::vector<RenderComponent*> renderComponents;
 };

@@ -18,8 +18,8 @@ struct alignas(16) LightData
 };
 struct alignas(16) ShadowData
 {
-	Matrix viewProjMats[4]; //
-	float  distances[4];    //
+	Matrix viewProjMats[4];
+	float  distances[4];
 };
 
 DirectionalLightComponent::DirectionalLightComponent(int shadowMapSize, float viewWidth, float viewHeight, float nearZ, float farZ)
@@ -38,7 +38,7 @@ void DirectionalLightComponent::Initialize()
 	textureDesc.Width = static_cast<float>(shadowMapSize);
 	textureDesc.Height = static_cast<float>(shadowMapSize);
 	textureDesc.MipLevels = 1;
-	textureDesc.ArraySize = 4; // shadowCascadeLevels.size()
+	textureDesc.ArraySize = shadowCascadeLevels.size();
 	textureDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 	textureDesc.SampleDesc.Count = 1;
 	textureDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -48,27 +48,27 @@ void DirectionalLightComponent::Initialize()
 	auto result = Game::GetInstance()->GetRenderSystem()->device->CreateTexture2D(&textureDesc, nullptr, shadowMapTexture2D.GetAddressOf());
 	assert(SUCCEEDED(result));
 
-	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc; // ok
+	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
 	ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
 	depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
 	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
 	depthStencilViewDesc.Texture2DArray.MipSlice = 0;
 	depthStencilViewDesc.Texture2DArray.FirstArraySlice = 0;
-	depthStencilViewDesc.Texture2DArray.ArraySize = 4; // shadowCascadeLevels.size()
+	depthStencilViewDesc.Texture2DArray.ArraySize = shadowCascadeLevels.size();
 	result = Game::GetInstance()->GetRenderSystem()->device->CreateDepthStencilView(shadowMapTexture2D.Get(), &depthStencilViewDesc, depthStencilView.GetAddressOf());
 	assert(SUCCEEDED(result));
 
-	D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc; // ok
+	D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
 	shaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
 	shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
 	shaderResourceViewDesc.Texture2DArray.MostDetailedMip = 0;
 	shaderResourceViewDesc.Texture2DArray.MipLevels = 1;
 	shaderResourceViewDesc.Texture2DArray.FirstArraySlice = 0;
-	shaderResourceViewDesc.Texture2DArray.ArraySize = 4; // shadowCascadeLevels.size()
+	shaderResourceViewDesc.Texture2DArray.ArraySize = shadowCascadeLevels.size();
 	result = Game::GetInstance()->GetRenderSystem()->device->CreateShaderResourceView(shadowMapTexture2D.Get(), &shaderResourceViewDesc, textureResourceView.GetAddressOf());
 	assert(SUCCEEDED(result));
 
-	viewport = std::make_shared<D3D11_VIEWPORT>(); // ok
+	viewport = std::make_shared<D3D11_VIEWPORT>();
 	viewport->Width = static_cast<float>(shadowMapSize);
 	viewport->Height = static_cast<float>(shadowMapSize);
 	viewport->MinDepth = 0.0f;
@@ -123,7 +123,6 @@ void DirectionalLightComponent::Draw()
 	memcpy(firstMappedResource.pData, &cameraData, sizeof(CameraData));
 	Game::GetInstance()->GetRenderSystem()->context->Unmap(constBuffer[0], 0);
 	
-	// DIRECTIONAL LIGHT
 	const LightData lightData
 	{
 		Game::GetInstance()->directionalLight->lightColor,
@@ -150,35 +149,31 @@ void DirectionalLightComponent::Draw()
 	memcpy(thirdMappedResource.pData, &lightShadowData, sizeof(ShadowData));
 	Game::GetInstance()->GetRenderSystem()->context->Unmap(constBuffer[2], 0);
 
-	///
-
-	Game::GetInstance()->GetRenderSystem()->context->OMSetBlendState(Game::GetInstance()->GetRenderSystem()->blendStateLight, nullptr, 0xffffffff); //-//
+	Game::GetInstance()->GetRenderSystem()->context->OMSetBlendState(Game::GetInstance()->GetRenderSystem()->blendStateLight, nullptr, 0xffffffff);
 
 	ID3D11ShaderResourceView* resources[] = {
 		Game::GetInstance()->GetRenderSystem()->gBuffer->diffuseSRV,
 		Game::GetInstance()->GetRenderSystem()->gBuffer->normalSRV,
 		Game::GetInstance()->GetRenderSystem()->gBuffer->worldPositionSRV
 	};
-	Game::GetInstance()->GetRenderSystem()->context->PSSetShaderResources(0, 3, resources); //-//
-	Game::GetInstance()->GetRenderSystem()->context->PSSetShaderResources(3, 1, Game::GetInstance()->directionalLight->textureResourceView.GetAddressOf()); //-//
-	Game::GetInstance()->GetRenderSystem()->context->PSSetSamplers(0, 1, Game::GetInstance()->GetRenderShadowsSystem()->sSamplerState.GetAddressOf());      //-//
+	Game::GetInstance()->GetRenderSystem()->context->PSSetShaderResources(0, 3, resources);
+	Game::GetInstance()->GetRenderSystem()->context->PSSetShaderResources(3, 1, Game::GetInstance()->directionalLight->textureResourceView.GetAddressOf());
+	Game::GetInstance()->GetRenderSystem()->context->PSSetSamplers(0, 1, Game::GetInstance()->GetRenderShadowsSystem()->sSamplerState.GetAddressOf());
 
-	//DIRECTIONAL
-	Game::GetInstance()->GetRenderSystem()->context->RSSetState(Game::GetInstance()->GetRenderSystem()->rastCullBack);              //-//
-	Game::GetInstance()->GetRenderSystem()->context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);                  //-//
-	Game::GetInstance()->GetRenderSystem()->context->OMSetDepthStencilState(Game::GetInstance()->GetRenderSystem()->dsDirLight, 0); //-//
+	Game::GetInstance()->GetRenderSystem()->context->RSSetState(Game::GetInstance()->GetRenderSystem()->rastCullBack);
+	Game::GetInstance()->GetRenderSystem()->context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	Game::GetInstance()->GetRenderSystem()->context->OMSetDepthStencilState(Game::GetInstance()->GetRenderSystem()->dsDirLight, 0);
 
-	Game::GetInstance()->GetRenderSystem()->context->IASetInputLayout(nullptr); //-//
-	Game::GetInstance()->GetRenderSystem()->context->IASetIndexBuffer(nullptr, DXGI_FORMAT_R32_UINT, 0); //-//
+	Game::GetInstance()->GetRenderSystem()->context->IASetInputLayout(nullptr);
+	Game::GetInstance()->GetRenderSystem()->context->IASetIndexBuffer(nullptr, DXGI_FORMAT_R32_UINT, 0);
 
-	Game::GetInstance()->GetRenderSystem()->context->VSSetShader(Game::GetInstance()->GetRenderSystem()->vsLighting, nullptr, 0); //-//
-	Game::GetInstance()->GetRenderSystem()->context->PSSetShader(Game::GetInstance()->GetRenderSystem()->psLighting, nullptr, 0); //-//
-	//Game::GetInstance()->GetRenderSystem()->context->GSSetShader(nullptr, nullptr, 0);
+	Game::GetInstance()->GetRenderSystem()->context->VSSetShader(Game::GetInstance()->GetRenderSystem()->vsLighting, nullptr, 0);
+	Game::GetInstance()->GetRenderSystem()->context->PSSetShader(Game::GetInstance()->GetRenderSystem()->psLighting, nullptr, 0);
 
-	Game::GetInstance()->GetRenderSystem()->context->VSSetConstantBuffers(0, 3, constBuffer); //-//
-	Game::GetInstance()->GetRenderSystem()->context->PSSetConstantBuffers(0, 3, constBuffer); //-//
+	Game::GetInstance()->GetRenderSystem()->context->VSSetConstantBuffers(0, 3, constBuffer);
+	Game::GetInstance()->GetRenderSystem()->context->PSSetConstantBuffers(0, 3, constBuffer);
 
-	Game::GetInstance()->GetRenderSystem()->context->Draw(4, 0); //-//
+	Game::GetInstance()->GetRenderSystem()->context->Draw(4, 0);
 }
 
 Matrix DirectionalLightComponent::GetViewMatrix()
@@ -190,7 +185,6 @@ Matrix DirectionalLightComponent::GetProjectionMatrix()
 {
 	return XMMatrixOrthographicLH(viewWidth, viewHeight, nearZ, farZ);
 }
-
 
 std::vector<Vector4> DirectionalLightComponent::GetFrustumCornerWorldSpace(const Matrix& view, const Matrix& proj)
 {
