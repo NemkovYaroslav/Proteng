@@ -9,44 +9,77 @@
 #include <random>
 #include <ctime>
 
+float RandomFloat(float min, float max)
+{
+	return ((float)rand() / RAND_MAX) * (max - min) + min;
+}
+
+template<typename T>
+std::vector<D3D_SHADER_MACRO> GetMacros(T flags)
+{
+	std::vector<D3D_SHADER_MACRO> macros;
+
+	constexpr auto& entries = magic_enum::enum_entries<T>();
+
+	for (const std::pair<T, std::string_view>& p : entries)
+	{
+		if (static_cast<uint32_t>(flags & p.first) > 0)
+		{
+			D3D_SHADER_MACRO macro;
+			macro.Name = p.second.data();
+			macro.Definition = "1";
+
+			macros.push_back(macro);
+		}
+	}
+
+	macros.push_back(D3D_SHADER_MACRO{ nullptr, nullptr });
+	return macros;
+}
+
 ParticleSystem::ParticleSystem()
 {
-	Width = 100;
-	Height = 100;
-	Length = 100;
+	Width = 100;  // чтобы частицы генерировались в пределах КУБА (потом отказались)
+	Height = 100; // чтобы частицы генерировались в пределах КУБА (потом отказались)
+	Length = 100; // чтобы частицы генерировались в пределах КУБА (потом отказались)
 	Position = Vector3(0, 10, -10);
 }
 
 void ParticleSystem::Initialize()
 {
-	LoadShaders("../Shaders/ParticlesRender.hlsl");
+	LoadShaders("../Shaders/ParticlesRender.hlsl"); // создаем шейдеры
+	CreateBuffers();                                // создаем буферы
 
-	CreateBuffers();
 	D3D11_RASTERIZER_DESC rastDesc = {};
 	rastDesc.CullMode = D3D11_CULL_BACK;
 	rastDesc.FillMode = D3D11_FILL_SOLID;
 
 	Game::GetInstance()->GetRenderSystem()->device->CreateRasterizerState(&rastDesc, &rastState);
 
-	auto blendStateLightDesc = D3D11_BLEND_DESC{false, false};
-	blendStateLightDesc.RenderTarget[0].BlendEnable = TRUE;
-	blendStateLightDesc.RenderTarget[0].RenderTargetWriteMask = 0x0f;
-	blendStateLightDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	blendStateLightDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	blendStateLightDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-	blendStateLightDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
-	blendStateLightDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
-	blendStateLightDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-	Game::GetInstance()->GetRenderSystem()->device->CreateBlendState(&blendStateLightDesc, &blendState);
+	auto blendStateDesc = D3D11_BLEND_DESC{false, false};
+	blendStateDesc.RenderTarget[0].BlendEnable           = TRUE;
+	blendStateDesc.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+	blendStateDesc.RenderTarget[0].BlendOp               = D3D11_BLEND_OP_ADD;
+	blendStateDesc.RenderTarget[0].BlendOpAlpha          = D3D11_BLEND_OP_ADD;
+	blendStateDesc.RenderTarget[0].SrcBlend              = D3D11_BLEND_SRC_ALPHA;
+	blendStateDesc.RenderTarget[0].DestBlend             = D3D11_BLEND_ONE;
+	blendStateDesc.RenderTarget[0].SrcBlendAlpha         = D3D11_BLEND_ZERO;
+	blendStateDesc.RenderTarget[0].DestBlendAlpha        = D3D11_BLEND_ONE;
+	Game::GetInstance()->GetRenderSystem()->device->CreateBlendState(&blendStateDesc, &blendState);
 
 	auto depthDesc = D3D11_DEPTH_STENCIL_DESC {};
-	depthDesc.DepthEnable = TRUE;
-	depthDesc.StencilEnable = FALSE;
-	depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
-	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-	depthDesc.StencilReadMask = 0x00;
+	depthDesc.DepthEnable      = TRUE;
+	depthDesc.StencilEnable    = FALSE;
+	depthDesc.DepthFunc        = D3D11_COMPARISON_LESS;
+	depthDesc.DepthWriteMask   = D3D11_DEPTH_WRITE_MASK_ZERO;
+	depthDesc.StencilReadMask  = 0x00;
 	depthDesc.StencilWriteMask = 0x00;
 	Game::GetInstance()->GetRenderSystem()->device->CreateDepthStencilState(&depthDesc, &depthState);
+}
+
+void ParticleSystem::GetGroupSize(int partCount, int &groupSizeX, int &groupSizeY)
+{
+
 }
 
 void ParticleSystem::LoadShaders(std::string shaderFileName)
@@ -124,35 +157,53 @@ void ParticleSystem::LoadShaders(std::string shaderFileName)
 	);
 	assert(SUCCEEDED(result));
 
-	///
+	std::vector<ComputeFlags> flags = {
+		ComputeFlags::INJECTION,
+		ComputeFlags::SIMULATION,
+		ComputeFlags::SIMULATION | ComputeFlags::ADD_GRAVITY,
+	};
 
-	Microsoft::WRL::ComPtr<ID3DBlob> compShaderByteCode;
-	ID3D11ComputeShader* compShader;
-	Game::GetInstance()->GetRenderSystem()->device->CreateComputeShader(
-		compShaderByteCode->GetBufferPointer(),
-		compShaderByteCode->GetBufferSize(),
-		nullptr, &compShader
-	);
-}
+	for (auto &flag : flags)
+	{
+		auto macros = GetMacros(flag);
+		Microsoft::WRL::ComPtr<ID3DBlob> computerShaderByteCode;
+		result = D3DCompileFromFile(
+			fileName.c_str(),
+			&macros[0],
+			nullptr,
+			"CSMain",
+			"cs_5_0",
+			D3DCOMPILE_PACK_MATRIX_ROW_MAJOR,
+			0,
+			computerShaderByteCode.GetAddressOf(),
+			&errorCode
+		);
+		assert(SUCCEEDED(result));
 
-float RandomFloat(float min, float max)
-{
-	return ((float)rand() / RAND_MAX) * (max - min) + min;
+		Microsoft::WRL::ComPtr<ID3DBlob> compShaderByteCode;
+		ID3D11ComputeShader* compShader;
+		Game::GetInstance()->GetRenderSystem()->device->CreateComputeShader(
+			compShaderByteCode->GetBufferPointer(),
+			compShaderByteCode->GetBufferSize(),
+			nullptr, &compShader
+		);
+
+		ComputeShaders.emplace(flag, compShader);
+	}
 }
 
 void ParticleSystem::CreateBuffers()
 {
 	D3D11_BUFFER_DESC constBufDesc;
-	constBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	constBufDesc.Usage = D3D11_USAGE_DEFAULT;
-	constBufDesc.MiscFlags = 0;
+	constBufDesc.BindFlags      = D3D11_BIND_CONSTANT_BUFFER;
+	constBufDesc.Usage          = D3D11_USAGE_DEFAULT;
+	constBufDesc.MiscFlags      = 0;
 	constBufDesc.CPUAccessFlags = 0;
-	constBufDesc.ByteWidth = sizeof(ConstData);
-
+	constBufDesc.ByteWidth      = sizeof(ConstData);
 	Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&constBufDesc, nullptr, &constBuf);
 
 	srand(time(NULL));
-	auto partsTempBuf = new Particle[MaxParticlesCount];
+	auto partsTempBuf = new Particle[MaxParticlesCount]; // берем наш массив частиц
 	for (int i = 0; i < MaxParticlesCount; i++)
 	{
 		auto pos = Vector4(Length * RandomFloat(-1.0f, 1.0f), Height * RandomFloat(-1.0f, 1.0f), Width * RandomFloat(-1.0f, 1.0f), 1.0f); //???????//
@@ -164,7 +215,7 @@ void ParticleSystem::CreateBuffers()
 		vel.y *= 0.01f;
 		vel.y += 100.01f;
 
-		partsTempBuf[i] = Particle
+		partsTempBuf[i] = Particle // инициализируем каждую частицу
 		{
 			pos,
 			vel,
@@ -175,23 +226,19 @@ void ParticleSystem::CreateBuffers()
 	}
 
 	D3D11_BUFFER_DESC bufDesc;
-	bufDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
-	bufDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-	bufDesc.Usage = D3D11_USAGE_DEFAULT;
-	bufDesc.CPUAccessFlags = 0;
+	bufDesc.BindFlags           = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
+	bufDesc.MiscFlags           = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	bufDesc.Usage               = D3D11_USAGE_DEFAULT;
+	bufDesc.CPUAccessFlags      = 0;
 	bufDesc.StructureByteStride = sizeof(Particle);
-	bufDesc.ByteWidth = MaxParticlesCount * sizeof(Particle);
-
+	bufDesc.ByteWidth           = MaxParticlesCount * sizeof(Particle);
 	D3D11_SUBRESOURCE_DATA data;
-	data.pSysMem = &partsTempBuf[0];
-	data.SysMemPitch = 0;
+	data.pSysMem          = &partsTempBuf[0];
+	data.SysMemPitch      = 0;
 	data.SysMemSlicePitch = 0;
-
-	Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&bufDesc, &data, &bufFirst);
-	Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&bufDesc, nullptr, &bufSecond);
-
+	Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&bufDesc, &data, &bufFirst);    // первый буфер содержит наши начальные данные data по частицам
+	Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&bufDesc, nullptr, &bufSecond); // второй буфер пустой, через него будем передавать частицы
 	delete[] partsTempBuf;
-
 	Game::GetInstance()->GetRenderSystem()->device->CreateShaderResourceView(bufFirst, nullptr, &srvFirst);
 	Game::GetInstance()->GetRenderSystem()->device->CreateShaderResourceView(bufSecond, nullptr, &srvSecond);
 
@@ -204,7 +251,6 @@ void ParticleSystem::CreateBuffers()
 		MaxParticlesCount,
 		D3D11_BUFFER_UAV_FLAG_APPEND
 	};
-
 	Game::GetInstance()->GetRenderSystem()->device->CreateUnorderedAccessView(bufFirst, &uavDesc, &uavFirst);
 	Game::GetInstance()->GetRenderSystem()->device->CreateUnorderedAccessView(bufSecond, &uavDesc, &uavSecond);
 
@@ -214,18 +260,17 @@ void ParticleSystem::CreateBuffers()
 	uavDst = uavSecond;
 
 	ID3D11UnorderedAccessView* nuPtr = nullptr;
-	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &uavSrc, &MaxParticlesCount);
+	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &uavSrc, &MaxParticlesCount); // если хотим сохранить предыдущее значение, то пишем в конце -1
 	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &nuPtr, nullptr);
 
 	D3D11_BUFFER_DESC countBufDesc;
-	countBufDesc.BindFlags = 0;
-	countBufDesc.Usage = D3D11_USAGE_STAGING;
-	countBufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-	countBufDesc.MiscFlags = 0;
+	countBufDesc.BindFlags           = 0;
+	countBufDesc.Usage               = D3D11_USAGE_STAGING; // мы читаем из него
+	countBufDesc.CPUAccessFlags      = D3D11_CPU_ACCESS_READ;
+	countBufDesc.MiscFlags           = 0;
 	countBufDesc.StructureByteStride = 0;
-	countBufDesc.ByteWidth = 4;
-
-	Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&countBufDesc, nullptr, &countBuf);
+	countBufDesc.ByteWidth           = 4;
+	Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&countBufDesc, nullptr, &countBuf); // буфер, с помощью которого узнаем значения, которые поместили в UnorderedAccessView выше
 
 	D3D11_BUFFER_DESC injBufDesc;
 	injBufDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
@@ -234,7 +279,6 @@ void ParticleSystem::CreateBuffers()
 	injBufDesc.CPUAccessFlags = 0;
 	injBufDesc.StructureByteStride = sizeof(Particle);
 	injBufDesc.ByteWidth = MaxParticlesInjectionCount * sizeof(Particle);
-
 	Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&injBufDesc, nullptr, &injectionBuf);
 
 	D3D11_UNORDERED_ACCESS_VIEW_DESC injUavDesc;
@@ -246,8 +290,12 @@ void ParticleSystem::CreateBuffers()
 		MaxParticlesInjectionCount,
 		D3D11_BUFFER_UAV_FLAG_APPEND
 	};
-
 	Game::GetInstance()->GetRenderSystem()->device->CreateUnorderedAccessView(injectionBuf, &injUavDesc, &injUav);
+}
+
+void ParticleSystem::AddParticle(const Particle& p)
+{
+
 }
 
 void ParticleSystem::Update(float deltaTime)
@@ -267,21 +315,23 @@ void ParticleSystem::Update(float deltaTime)
 
 	Game::GetInstance()->GetRenderSystem()->context->UpdateSubresource(constBuf, 0, nullptr, &constData, 0, 0);
 
+	// update points positions, remove too old
 	Game::GetInstance()->GetRenderSystem()->context->CSSetConstantBuffers(0, 1, &constBuf);
 
 	const UINT counterKeepValue = -1;
-	const UINT counterZero = 0;
+	const UINT counterZero      = 0;
 
-	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &uavSrc, &counterKeepValue);
-	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(1, 1, &uavDst, &counterZero);
+	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &uavSrc, &counterKeepValue); // читаем частицы, сохраняем позиции точек через -1
+	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(1, 1, &uavDst, &counterZero);      // сюда записываем поэтому ставим 0
 
-	Game::GetInstance()->GetRenderSystem()->context->CSSetShader(ComputeShaders, nullptr, 0); //???????//
+	Game::GetInstance()->GetRenderSystem()->context->CSSetShader(ComputeShaders[ComputeFlags::SIMULATION | ComputeFlags::ADD_GRAVITY], nullptr, 0); //???????//
 
 	if (groupSizeX > 0)
 	{
 		Game::GetInstance()->GetRenderSystem()->context->Dispatch(groupSizeX, groupSizeY, 1);
 	}
 
+	// add new points if any
 	if (injectionCount > 0)
 	{
 		Game::GetInstance()->GetRenderSystem()->context->CSSetConstantBuffers(0, 1, nullptr);
@@ -294,16 +344,26 @@ void ParticleSystem::Update(float deltaTime)
 		Game::GetInstance()->GetRenderSystem()->context->UpdateSubresource(constBuf, 0, nullptr, &constData, 0, 0);
 		Game::GetInstance()->GetRenderSystem()->context->CSSetConstantBuffers(0, 1, &constBuf);
 
-		Game::GetInstance()->GetRenderSystem()->context->UpdateSubresource(injectionBuf, 0, nullptr, injectionParticles, 0, 0);
+		Game::GetInstance()->GetRenderSystem()->context->UpdateSubresource(injectionBuf, 0, nullptr, injectionParticles, 0, 0); // обновили injectionBuf частицами из injectionParticles
 
 		Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &injUav, &injectionCount);
-		Game::GetInstance()->GetRenderSystem()->context->CSSetShader(ComputeShaders, nullptr, 0);
+		Game::GetInstance()->GetRenderSystem()->context->CSSetShader(ComputeShaders[ComputeFlags::INJECTION], nullptr, 0); //???????//
 
 		Game::GetInstance()->GetRenderSystem()->context->Dispatch(injSizeX, injSizeY, 1);
 
 		injectionCount = 0;
 	}
 
-	///
+	ID3D11UnorderedAccessView* nuPtr = nullptr;
+	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &nuPtr, &counterZero);
+	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(1, 1, &nuPtr, &counterZero);
+
+	// get points count
+	Game::GetInstance()->GetRenderSystem()->context->CopyStructureCount(countBuf, 0, uavDst);
+
+	D3D11_MAPPED_SUBRESOURCE subresource;
+	Game::GetInstance()->GetRenderSystem()->context->Map(countBuf, 0, D3D11_MAP_READ, 0, &subresource);
+
+
 
 }
