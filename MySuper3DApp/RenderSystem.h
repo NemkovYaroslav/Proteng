@@ -1,5 +1,6 @@
 #pragma once
 #include "includes.h"
+#include <map>
 
 using namespace DirectX::SimpleMath;
 
@@ -60,12 +61,6 @@ public:
 	ID3D11PixelShader*  psOpaque;
 	ID3D11PixelShader*  psLighting;
 	ID3D11PixelShader*  psLightingPoi;
-
-	// FLAGS
-
-
-
-	//
 
 	std::vector<RenderComponent*> renderComponents;
 };

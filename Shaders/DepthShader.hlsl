@@ -27,7 +27,7 @@ GS_IN VSMain(VS_IN input)
 
 struct GS_OUT
 {
-    float4 pos : SV_POSITION;
+    float4 pos  : SV_POSITION;
     uint arrInd : SV_RenderTargetArrayIndex;
 };
 
