@@ -71,7 +71,6 @@ public:
 	void Initialize() override;
 	void Update(float deltaTime) override;
 	void Draw(float deltaTime);
-	void DestroyResources();
 
 	void AddParticle(const Particle& p);
 

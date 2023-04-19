@@ -364,6 +364,48 @@ void ParticleSystem::Update(float deltaTime)
 	D3D11_MAPPED_SUBRESOURCE subresource;
 	Game::GetInstance()->GetRenderSystem()->context->Map(countBuf, 0, D3D11_MAP_READ, 0, &subresource);
 
+	UINT* data = reinterpret_cast<UINT*>(subresource.pData);
+	ParticlesCount = data[0];
+	Game::GetInstance()->GetRenderSystem()->context->Unmap(countBuf, 0);
 
+	SwapBuffers();
+}
 
+void ParticleSystem::Draw(float deltaTime)
+{
+	// draw points
+	Game::GetInstance()->GetRenderSystem()->context->ClearState();
+	//Game::GetInstance()->RestoreTargets();//
+
+	ID3D11RasterizerState* oldState = nullptr;
+	Game::GetInstance()->GetRenderSystem()->context->RSGetState(&oldState);
+	Game::GetInstance()->GetRenderSystem()->context->RSSetState(rastState);
+
+	ID3D11BlendState* oldBlend = nullptr;
+	UINT oldMask = 0;
+	float old_blend_factor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	Game::GetInstance()->GetRenderSystem()->context->OMGetBlendState(&oldBlend, old_blend_factor, &oldMask);
+
+	float blend_factor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	Game::GetInstance()->GetRenderSystem()->context->OMSetBlendState(blendState, blend_factor, 0xffffffff);
+
+	ID3D11DepthStencilState* oldDepthState = nullptr;
+	UINT oldStenBuf = 0;
+	Game::GetInstance()->GetRenderSystem()->context->OMGetDepthStencilState(&oldDepthState, &oldStenBuf);
+	Game::GetInstance()->GetRenderSystem()->context->OMSetDepthStencilState(depthState, 0);
+
+	Game::GetInstance()->GetRenderSystem()->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+	Game::GetInstance()->GetRenderSystem()->context->VSSetShader(vertShader, nullptr, 0);
+	Game::GetInstance()->GetRenderSystem()->context->GSSetShader(geomShader, nullptr, 0);
+	Game::GetInstance()->GetRenderSystem()->context->PSSetShader(pixShader, nullptr, 0);
+
+	Game::GetInstance()->GetRenderSystem()->context->GSSetConstantBuffers(0, 1, &constBuf);
+	Game::GetInstance()->GetRenderSystem()->context->GSSetShaderResources(0, 1, &srvSrc);
+
+	Game::GetInstance()->GetRenderSystem()->context->Draw(ParticlesCount, 0);
+
+	Game::GetInstance()->GetRenderSystem()->context->OMSetBlendState(oldBlend, old_blend_factor, oldMask);
+	Game::GetInstance()->GetRenderSystem()->context->RSSetState(oldState);
+	Game::GetInstance()->GetRenderSystem()->context->OMSetDepthStencilState(oldDepthState, oldStenBuf);
 }
