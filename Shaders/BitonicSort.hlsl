@@ -31,6 +31,9 @@ RWStructuredBuffer<unsigned int> Data : register(u0);
 //--------------------------------------------------------------------------------------
 // Bitonic Sort Compute Shader
 //--------------------------------------------------------------------------------------
+
+#ifdef BITONIC_SORT
+
 groupshared unsigned int shared_data[BITONIC_BLOCK_SIZE];
 
 [numthreads(BITONIC_BLOCK_SIZE, 1, 1)]
@@ -56,9 +59,14 @@ void BitonicSort(uint3 Gid : SV_GroupID,
     Data[DTid.x] = shared_data[GI];
 }
 
+#endif
+
 //--------------------------------------------------------------------------------------
 // Matrix Transpose Compute Shader
 //--------------------------------------------------------------------------------------
+
+#ifdef TRANSPOSE
+
 groupshared unsigned int transpose_shared_data[TRANSPOSE_BLOCK_SIZE * TRANSPOSE_BLOCK_SIZE];
 
 [numthreads(TRANSPOSE_BLOCK_SIZE, TRANSPOSE_BLOCK_SIZE, 1)]
@@ -72,3 +80,5 @@ void MatrixTranspose(uint3 Gid : SV_GroupID,
     uint2 XY = DTid.yx - GTid.yx + GTid.xy;
     Data[XY.y * g_iHeight + XY.x] = transpose_shared_data[GTid.x * TRANSPOSE_BLOCK_SIZE + GTid.y];
 }
+
+#endif

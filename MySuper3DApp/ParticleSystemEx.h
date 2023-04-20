@@ -8,7 +8,7 @@ using namespace DirectX::SimpleMath;
 
 using namespace magic_enum::bitwise_operators;
 
-class ParticleSystemEx : public Component
+class ParticleSystemEx
 {
 	ID3D11Buffer *particlesPool, *sortBuffer, *deadBuf, *injectionBuf, *constBuf, *countBuf, *debugBuf;
 
@@ -67,8 +67,18 @@ public:
 
 	BitonicSort* sort;
 
+	//
 
+	ParticleSystemEx();
 
+	static void GetGroupSize(int partCount, int& groupSizeX, int& groupSizeY);
+
+	void LoadShaders();
+	void CreateBuffers();
+
+	void Initialize() override;
+	void Update(float deltaTime) override;
+	void Draw(float deltaTime);
 };
 
 class BitonicSort

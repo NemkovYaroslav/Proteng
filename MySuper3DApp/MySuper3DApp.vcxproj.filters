@@ -213,10 +213,10 @@
     <FxCompile Include="..\Shaders\DeferredLightingPoi.hlsl">
       <Filter>Resource Files\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="..\Shaders\ParticlesRender.hlsl">
+    <FxCompile Include="..\Shaders\BitonicSort.hlsl">
       <Filter>Resource Files\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="..\Shaders\BitonicSort.hlsl">
+    <FxCompile Include="..\Shaders\ParticlesRenderEx.hlsl">
       <Filter>Resource Files\Shaders</Filter>
     </FxCompile>
   </ItemGroup>
