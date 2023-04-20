@@ -86,16 +86,12 @@ void GSMain(point VSOutput inputPoint[1], inout TriangleStream<GSOutput> outputS
 float4 PSMain(GSOutput input) : SV_Target0
 {
     float amount = length(input.Tex - float2(0.5f, 0.5f)) * 2.0f;
-    // берем текстурные координаты, вычитаем из них центр текстурных координат, 
-    
+    // берем текстурные координаты, вычитаем из них центр текстурных координат,   
     amount = smoothstep(0.0f, 1.0f, 1.0f - amount);
     // делаем частицы кружочками с размытыми краями
-
     return float4(input.Color.rgb, amount);
 }
 
-//#ifdef INJECTION
-//#ifdef SIMULATION
 #define BLOCK_SIZE 256
 #define THREAD_IN_GROUP_TOTAL 256
 
@@ -108,7 +104,7 @@ void CSMain
     uint  groupIndex       : SV_GroupIndex
 )
 {
-    uint id = groupID.x * THREAD_IN_GROUP_TOTAL * groupID.y * Params.DeltaTimeMaxParticlesGroupdim.z * THREAD_IN_GROUP_TOTAL;
+    uint id = groupID.x * THREAD_IN_GROUP_TOTAL + groupID.y * Params.DeltaTimeMaxParticlesGroupdim.z * THREAD_IN_GROUP_TOTAL;
     
     [flatten] // если текущий индекст больше максимального количества живых частиц, то ничего не делаем
     if (id >= (uint) Params.DeltaTimeMaxParticlesGroupdim.y)

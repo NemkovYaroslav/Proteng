@@ -13,20 +13,22 @@ class ParticleSystem : Component
 public:
 
 	ID3D11Buffer *bufFirst, *bufSecond, *countBuf, *injectionBuf, *constBuf;
-	// countBuf - считаем частицы; injectionBuf - добавляем новые частицы;
+	// coutBuf - используется чтобы получать количество живых или мертвых частиц
+	// injectionBuf - с помощью его можно добавить новые частицы
 
 	ID3D11ShaderResourceView *srvFirst, *srvSecond, *srvSrc, *srvDst;
 	ID3D11UnorderedAccessView *uavFirst, *uavSecond, *uavSrc, *uavDst, *injUav;
+	// srvFirst и srvSecond - используются для переливания
 
 	Vector3 Position;
 	float Width, Height, Length;
 
 	const unsigned int MaxParticlesCount = 256 * 256 * 128; // максимальное количество частиц
-	const unsigned int MaxParticlesInjectionCount = 100;    // максимальное количество частиц, которое можно добавить за 1 кадр
+	const unsigned int MaxParticlesInjectionCount = 100;    // максимальное количество частиц, которое можно добавить за 1 кадр, не больше 100
 	UINT injectionCount = 0;                                // количество частиц, которое мы добавляем на текущем кадре
 	int ParticlesCount = MaxParticlesCount;                 // текущее количество частиц
 
-	struct Particle // стркутура, описывающая частицу
+	struct Particle // структура, описывающая частицу
 	{
 		Vector4 Position;   // позиция частицы
 		Vector4 Velocity;   // скорость частицы
@@ -66,7 +68,8 @@ public:
 
 	ParticleSystem();
 
-	//static void GetGroupSize(int partCount, int& groupSizeX, int& groupSizeY);
+	static void GetGroupSize(int partCount, int& groupSizeX, int& groupSizeY);
+	void SwapBuffers();
 
 	void Initialize() override;
 	void Update(float deltaTime) override;
@@ -75,6 +78,5 @@ public:
 	void LoadShaders(std::string shaderFileName);
 	void CreateBuffers();
 	void AddParticle(const Particle& p);
-	//void SwapBuffers();
 };
 
