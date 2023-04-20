@@ -39,9 +39,9 @@ std::vector<D3D_SHADER_MACRO> GetMacros(T flags)
 
 ParticleSystem::ParticleSystem()
 {
-	Width = 100;  // чтобы частицы генерировались в пределах КУБА (потом отказались)
-	Height = 100; // чтобы частицы генерировались в пределах КУБА (потом отказались)
-	Length = 100; // чтобы частицы генерировались в пределах КУБА (потом отказались)
+	Width    = 100;
+	Height   = 100;
+	Length   = 100;
 	Position = Vector3(0, 10, -10);
 }
 
@@ -75,11 +75,6 @@ void ParticleSystem::Initialize()
 	depthDesc.StencilReadMask  = 0x00;
 	depthDesc.StencilWriteMask = 0x00;
 	Game::GetInstance()->GetRenderSystem()->device->CreateDepthStencilState(&depthDesc, &depthState);
-}
-
-void ParticleSystem::GetGroupSize(int partCount, int &groupSizeX, int &groupSizeY)
-{
-
 }
 
 void ParticleSystem::LoadShaders(std::string shaderFileName)
@@ -306,7 +301,7 @@ void ParticleSystem::Update(float deltaTime)
 	}
 
 	int groupSizeX, groupSizeY;
-	GetGroupSize(ParticlesCount, groupSizeX, groupSizeY);
+	//GetGroupSize(ParticlesCount, groupSizeX, groupSizeY);
 
 	constData.World = gameObject->transformComponent->GetModel();
 	constData.View = Game::GetInstance()->currentCamera->gameObject->transformComponent->GetView();
@@ -337,7 +332,7 @@ void ParticleSystem::Update(float deltaTime)
 		Game::GetInstance()->GetRenderSystem()->context->CSSetConstantBuffers(0, 1, nullptr);
 
 		int injSizeX, injSizeY;
-		GetGroupSize(injectionCount, injSizeX, injSizeY);
+		//GetGroupSize(injectionCount, injSizeX, injSizeY);
 
 		constData.DeltaTimeMaxParticlesGroupdim = Vector4(deltaTime, injectionCount, injSizeY, 0);
 
@@ -368,7 +363,7 @@ void ParticleSystem::Update(float deltaTime)
 	ParticlesCount = data[0];
 	Game::GetInstance()->GetRenderSystem()->context->Unmap(countBuf, 0);
 
-	SwapBuffers();
+	//SwapBuffers();
 }
 
 void ParticleSystem::Draw(float deltaTime)

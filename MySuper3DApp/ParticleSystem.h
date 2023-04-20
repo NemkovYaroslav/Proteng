@@ -8,7 +8,7 @@ using namespace DirectX::SimpleMath;
 
 using namespace magic_enum::bitwise_operators;
 
-class ParticleSystem
+class ParticleSystem : Component
 {
 public:
 
@@ -66,16 +66,15 @@ public:
 
 	ParticleSystem();
 
-	static void GetGroupSize(int partCount, int &groupSizeX, int &groupSizeY);
+	//static void GetGroupSize(int partCount, int& groupSizeX, int& groupSizeY);
 
 	void Initialize() override;
 	void Update(float deltaTime) override;
 	void Draw(float deltaTime);
 
-	void AddParticle(const Particle& p);
-
 	void LoadShaders(std::string shaderFileName);
 	void CreateBuffers();
-	void SwapBuffers();
+	void AddParticle(const Particle& p);
+	//void SwapBuffers();
 };
 

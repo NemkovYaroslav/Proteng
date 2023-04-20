@@ -114,9 +114,6 @@
     <ClCompile Include="ParticleSystem.cpp">
       <Filter>Source Files\Other</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleSystemEx.cpp">
-      <Filter>Source Files\Other</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Delegates.h">
@@ -188,9 +185,6 @@
     <ClInclude Include="ParticleSystem.h">
       <Filter>Header Files\Other</Filter>
     </ClInclude>
-    <ClInclude Include="ParticleSystemEx.h">
-      <Filter>Header Files\Other</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleMath.inl">
@@ -213,10 +207,7 @@
     <FxCompile Include="..\Shaders\DeferredLightingPoi.hlsl">
       <Filter>Resource Files\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="..\Shaders\BitonicSort.hlsl">
-      <Filter>Resource Files\Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\Shaders\ParticlesRenderEx.hlsl">
+    <FxCompile Include="..\Shaders\ParticlesRender.hlsl">
       <Filter>Resource Files\Shaders</Filter>
     </FxCompile>
   </ItemGroup>
