@@ -128,6 +128,9 @@ void KatamariDamacyGame::Initialize()
 		Quaternion::CreateFromAxisAngle(DirectX::SimpleMath::Vector3::Up, DirectX::XM_PI)
 	);
 	Game::GetInstance()->AddGameObject(spider3);
+
+	GameObject* particleSystem = new GameObject();
+	particleSystem->
 }
 
 void KatamariDamacyGame::Run()

@@ -270,7 +270,6 @@ void ParticleSystem::CreateBuffers()
 	// ???
 	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &nuPtr, nullptr);
 
-
 	// буфер, с помощью которого узнаем значения, хранищиеся в счётчике
 	D3D11_BUFFER_DESC countBufDesc;
 	countBufDesc.BindFlags           = 0;
@@ -310,7 +309,16 @@ void ParticleSystem::AddParticle(const Particle& p)
 
 void ParticleSystem::SwapBuffers()
 {
+	ID3D11ShaderResourceView* srvTemp;
+	ID3D11UnorderedAccessView* uavTemp;
 
+	srvTemp = srvSrc;
+	srvSrc  = srvDst;
+	srvDst  = srvTemp;
+
+	uavTemp = uavSrc;
+	uavSrc  = uavDst;
+	uavDst  = uavTemp;
 }
 
 void ParticleSystem::Update(float deltaTime)
