@@ -9,6 +9,7 @@ class GameObject;
 class CameraComponent;
 class DirectionalLightComponent;
 class PointLightComponent;
+class ParticleSystem;
 
 class Game
 {
@@ -38,6 +39,8 @@ public:
 	DirectionalLightComponent*        directionalLight;
 	std::vector<PointLightComponent*> pointLights[2];
 	std::vector<GameObject*>          gameObjects;
+
+	ParticleSystem* currentParticleSystem;
 
 	void Run();
 	virtual void PrepareResources();

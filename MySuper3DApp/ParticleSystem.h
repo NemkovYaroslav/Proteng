@@ -8,7 +8,7 @@ using namespace DirectX::SimpleMath;
 
 using namespace magic_enum::bitwise_operators;
 
-class ParticleSystem : Component
+class ParticleSystem : public Component
 {
 public:
 

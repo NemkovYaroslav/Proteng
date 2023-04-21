@@ -6,6 +6,7 @@
 #include "ModelComponent.h"
 #include "DirectionalLightComponent.h"
 #include "PointLightComponent.h"
+#include "ParticleSystem.h"
 
 KatamariDamacyGame::KatamariDamacyGame(LPCWSTR name, int clientWidth, int clientHeight) : Game(name, clientWidth, clientHeight)
 {
@@ -130,7 +131,12 @@ void KatamariDamacyGame::Initialize()
 	Game::GetInstance()->AddGameObject(spider3);
 
 	GameObject* particleSystem = new GameObject();
-	particleSystem->
+	particleSystem->CreateMesh(0.2f, "../Textures/LampAlbedo.png", "../Models/lamp.obj");
+	particleSystem->transformComponent->SetPosition(Vector3(0.0f, 0.5f, 12.0f));
+	ParticleSystem* particleSystemComponent = new ParticleSystem();
+	particleSystem->AddComponent(particleSystemComponent);
+	Game::GetInstance()->currentParticleSystem = particleSystemComponent;
+	Game::GetInstance()->AddGameObject(particleSystem);
 }
 
 void KatamariDamacyGame::Run()

@@ -9,6 +9,7 @@
 #include "DirectionalLightComponent.h"
 #include "PointLightComponent.h"
 #include "GBuffer.h"
+#include "ParticleSystem.h"
 
 Game* Game::instance = nullptr;
 

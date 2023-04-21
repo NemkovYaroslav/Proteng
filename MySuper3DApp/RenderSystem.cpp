@@ -7,6 +7,7 @@
 #include "GBuffer.h"
 #include "GameObject.h"
 #include "PointLightComponent.h"
+#include "ParticleSystem.h"
 
 RenderSystem::RenderSystem()
 {
@@ -433,6 +434,10 @@ void RenderSystem::Draw()
 	Game::GetInstance()->pointLights->at(0)->Draw();
 
 	Game::GetInstance()->pointLights->at(1)->Draw();
+
+	context->ClearState();
+
+	Game::GetInstance()->currentParticleSystem->Draw(Game::GetInstance()->deltaTime);
 }
 
 void RenderSystem::EndFrame()

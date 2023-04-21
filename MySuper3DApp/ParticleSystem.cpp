@@ -178,13 +178,13 @@ void ParticleSystem::LoadShaders(std::string shaderFileName)
 			&errorCode
 		);
 		assert(SUCCEEDED(result));
-		Microsoft::WRL::ComPtr<ID3DBlob> compShaderByteCode;
 		ID3D11ComputeShader* compShader;
-		Game::GetInstance()->GetRenderSystem()->device->CreateComputeShader(
-			compShaderByteCode->GetBufferPointer(),
-			compShaderByteCode->GetBufferSize(),
+		result = Game::GetInstance()->GetRenderSystem()->device->CreateComputeShader(
+			computerShaderByteCode->GetBufferPointer(),
+			computerShaderByteCode->GetBufferSize(),
 			nullptr, &compShader
 		);
+		assert(SUCCEEDED(result));
 		ComputeShaders.emplace(flag, compShader);
 	}
 }
@@ -390,14 +390,13 @@ void ParticleSystem::Update(float deltaTime)
 	Game::GetInstance()->GetRenderSystem()->context->Unmap(countBuf, 0);
 
 	SwapBuffers();
+
+	std::cout << "UPDATE" << std::endl;
 }
 
 void ParticleSystem::Draw(float deltaTime)
 {
 	// draw points
-	//Game::GetInstance()->GetRenderSystem()->context->ClearState();
-	//Game::GetInstance()->RestoreTargets();//
-
 	ID3D11RasterizerState* oldState = nullptr;
 	Game::GetInstance()->GetRenderSystem()->context->RSGetState(&oldState);
 	Game::GetInstance()->GetRenderSystem()->context->RSSetState(rastState);
@@ -429,4 +428,6 @@ void ParticleSystem::Draw(float deltaTime)
 	Game::GetInstance()->GetRenderSystem()->context->OMSetBlendState(oldBlend, old_blend_factor, oldMask);
 	Game::GetInstance()->GetRenderSystem()->context->RSSetState(oldState);
 	Game::GetInstance()->GetRenderSystem()->context->OMSetDepthStencilState(oldDepthState, oldStenBuf);
+
+	std::cout << "DRAW" << std::endl;
 }

@@ -28,7 +28,7 @@ struct VSOutput
     int vertexID : TEXCOORD0; // VertexID на выход
 };
 // т.к. вертексов у нас нет, мы можем получить текущий ID вертекса при рисовании без использования Vertex Buffer
-VSOutput VSMain(uint vertexID : SV_VectexID) // вершинный шейдер на вход получает VertexID
+VSOutput VSMain(uint vertexID : SV_VertexID) // вершинный шейдер на вход получает VertexID
 {
     VSOutput output;
     output.vertexID = vertexID; // отправляет VertexID на выход
