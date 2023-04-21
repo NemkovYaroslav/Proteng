@@ -23,7 +23,6 @@ StructuredBuffer<Particle>        renderBufSrc    : register(t0); // буфер части
 ConsumeStructuredBuffer<Particle> particlesBufSrc : register(u0);
 AppendStructuredBuffer<Particle>  particlesBufDst : register(u1);
 
-
 struct VSOutput
 {
     int vertexID : TEXCOORD0; // VertexID на выход

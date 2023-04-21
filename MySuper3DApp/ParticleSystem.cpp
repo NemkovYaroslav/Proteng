@@ -77,7 +77,8 @@ void ParticleSystem::GetGroupSize(int partCount, int& groupSizeX, int& groupSize
 	int numGroups = (partCount % 256 != 0) ? ((partCount / 256) + 1) : (partCount / 256);
 	double secondRoot = std::pow((double)numGroups, (double)(1.0f / 2.0f));
 	secondRoot = std::ceil(secondRoot); // вычисляет наименьшее integer значение не меньше чем secondRoot
-	groupSizeX = groupSizeY = (int)secondRoot;
+	groupSizeX = (int)secondRoot;
+	groupSizeY = groupSizeX;
 }
 
 void ParticleSystem::LoadShaders(std::string shaderFileName)
