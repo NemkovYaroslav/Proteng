@@ -7,18 +7,6 @@ struct Particle
     float  LifeTime;
 };
 
-struct VSOutput
-{
-    int vertexID : TEXCOORD0; // отправляет VertexID на выход
-};
-
-struct GSOutput
-{
-    float4 Position : SV_Position;
-    float4 Color    : COLOR0;
-    float2 Tex      : TEXCOORD0;
-};
-
 struct ConstParams
 {
     float4x4 World;
@@ -26,16 +14,21 @@ struct ConstParams
     float4x4 Projection;
     float4   DeltaTimeMaxParticlesGroupdim;
 };
-
 cbuffer CB1 : register(b0)
 {
     ConstParams Params;
 }
 
-StructuredBuffer<Particle>        renderBufSrc    : register(t0);
+StructuredBuffer<Particle>        renderBufSrc    : register(t0); // буфер частиц
 ConsumeStructuredBuffer<Particle> particlesBufSrc : register(u0);
 AppendStructuredBuffer<Particle>  particlesBufDst : register(u1);
 
+
+struct VSOutput
+{
+    int vertexID : TEXCOORD0; // VertexID на выход
+};
+// т.к. вертексов у нас нет, мы можем получить текущий ID вертекса при рисовании без использования Vertex Buffer
 VSOutput VSMain(uint vertexID : SV_VectexID) // вершинный шейдер на вход получает VertexID
 {
     VSOutput output;
@@ -43,7 +36,13 @@ VSOutput VSMain(uint vertexID : SV_VectexID) // вершинный шейдер на вход получае
     return output;
 }
 
-[maxvertexcount(4)] // геометрический шейдер, максимальное число вершин 4
+struct GSOutput
+{
+    float4 Position : SV_Position;
+    float4 Color    : COLOR0;
+    float2 Tex      : TEXCOORD0;
+};
+[maxvertexcount(4)] // максимальное кол-во вертексов, которое мы можем добавить
 void GSMain(point VSOutput inputPoint[1], inout TriangleStream<GSOutput> outputStream)
 {
     GSOutput p0, p1, p2, p3; // 4 точки
@@ -53,10 +52,10 @@ void GSMain(point VSOutput inputPoint[1], inout TriangleStream<GSOutput> outputS
     float sz = prt.Size0Size1.x; // высчитываем значение Size'а
     float4 color = prt.Color0;   // берем цвет
     
-    float4 wvPos = prt.Position; // это WorldViewPosition
+    float4 wvPos = prt.Position;                     // это WorldViewPosition
     wvPos = mul(float4(wvPos.xyz, 1), Params.World); // World матрица нашей Particle System'ы
     wvPos = mul(float4(wvPos.xyz, 1), Params.View);
-    wvPos = float4(wvPos.xyz, 1.0f); // получаем WorldViewPosition в пространстве камеры
+    wvPos = float4(wvPos.xyz, 1.0f);                 // получаем WorldViewPosition в пространстве камеры
     
     // немного растягиваем 4 точки по пространству камеры
     p0.Position = mul(wvPos + float4(sz, sz, 0, 0), Params.Projection);
@@ -75,7 +74,7 @@ void GSMain(point VSOutput inputPoint[1], inout TriangleStream<GSOutput> outputS
     p3.Tex = float2(1, 0);
     p3.Color = color;
     
-    // записываем 4 вершины
+    // Добавление вершины (вертексы)
     outputStream.Append(p1);
     outputStream.Append(p0);
     outputStream.Append(p2);
@@ -104,9 +103,9 @@ void CSMain
     uint  groupIndex       : SV_GroupIndex
 )
 {
-    uint id = groupID.x * THREAD_IN_GROUP_TOTAL + groupID.y * Params.DeltaTimeMaxParticlesGroupdim.z * THREAD_IN_GROUP_TOTAL;
+    uint id = groupID.x * THREAD_IN_GROUP_TOTAL + groupID.y * Params.DeltaTimeMaxParticlesGroupdim.z * THREAD_IN_GROUP_TOTAL + groupIndex;
     
-    [flatten] // если текущий индекст больше максимального количества живых частиц, то ничего не делаем
+    [flatten] // если текущий индекс больше максимального количества живых частиц, то ничего не делаем
     if (id >= (uint) Params.DeltaTimeMaxParticlesGroupdim.y)
     {
         return;

@@ -74,7 +74,10 @@ void ParticleSystem::Initialize()
 
 void ParticleSystem::GetGroupSize(int partCount, int& groupSizeX, int& groupSizeY)
 {
-
+	int numGroups = (partCount % 256 != 0) ? ((partCount / 256) + 1) : (partCount / 256);
+	double secondRoot = std::pow((double)numGroups, (double)(1.0f / 2.0f));
+	secondRoot = std::ceil(secondRoot); // вычисляет наименьшее integer значение не меньше чем secondRoot
+	groupSizeX = groupSizeY = (int)secondRoot;
 }
 
 void ParticleSystem::LoadShaders(std::string shaderFileName)
@@ -316,22 +319,21 @@ void ParticleSystem::Update(float deltaTime)
 		deltaTime = 0.0f;
 	}
 
-	int groupSizeX, groupSizeY;
-	GetGroupSize(ParticlesCount, groupSizeX, groupSizeY);
-
-	// Const Buffer
+	// Const Buffer Standart Values
 	constData.World = gameObject->transformComponent->GetModel();
 	constData.View = Game::GetInstance()->currentCamera->gameObject->transformComponent->GetView();
 	constData.Projection = Game::GetInstance()->currentCamera->GetProjection();
+
+	// Group size ParticlesCount
+	int groupSizeX, groupSizeY;
+	GetGroupSize(ParticlesCount, groupSizeX, groupSizeY);
 	constData.DeltaTimeMaxParticlesGroupdim = Vector4(deltaTime, ParticlesCount, groupSizeY, 0);
 	Game::GetInstance()->GetRenderSystem()->context->UpdateSubresource(constBuf, 0, nullptr, &constData, 0, 0);
-
-	// update points positions, remove too old
 	Game::GetInstance()->GetRenderSystem()->context->CSSetConstantBuffers(0, 1, &constBuf);
 
+	// update points positions, remove too old
 	const UINT counterKeepValue = -1;
 	const UINT counterZero      = 0;
-
 	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &uavSrc, &counterKeepValue); // читаем частицы, сохраняем позиции точек через -1
 	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(1, 1, &uavDst, &counterZero);      // сюда записываем поэтому ставим 0
 
@@ -347,9 +349,9 @@ void ParticleSystem::Update(float deltaTime)
 	{
 		Game::GetInstance()->GetRenderSystem()->context->CSSetConstantBuffers(0, 1, nullptr);
 
+		// Group size InjectionCount
 		int injSizeX, injSizeY;
 		GetGroupSize(injectionCount, injSizeX, injSizeY);
-
 		constData.DeltaTimeMaxParticlesGroupdim = Vector4(deltaTime, injectionCount, injSizeY, 0);
 		Game::GetInstance()->GetRenderSystem()->context->UpdateSubresource(constBuf, 0, nullptr, &constData, 0, 0);
 		Game::GetInstance()->GetRenderSystem()->context->CSSetConstantBuffers(0, 1, &constBuf);
