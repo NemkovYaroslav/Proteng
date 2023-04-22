@@ -23,6 +23,8 @@ StructuredBuffer<Particle>        renderBufSrc    : register(t0); // буфер части
 ConsumeStructuredBuffer<Particle> particlesBufSrc : register(u0);
 AppendStructuredBuffer<Particle>  particlesBufDst : register(u1);
 
+Texture2D DepthMap : register(t1);
+
 struct VSOutput
 {
     int vertexID : TEXCOORD0;
@@ -54,7 +56,7 @@ void GSMain(point VSOutput inputPoint[1], inout TriangleStream<GSOutput> outputS
     float4 wvPos = prt.Position;
     wvPos = mul(float4(wvPos.xyz, 1), Params.World);
     wvPos = mul(float4(wvPos.xyz, 1), Params.View);
-    wvPos = float4(wvPos.xyz, 1.0f);                 // получаем WorldViewPosition в пространстве камеры
+    wvPos = float4(wvPos.xyz, 1.0f); // получаем WorldViewPosition в пространстве камеры
     
     // немного растягиваем 4 точки по пространству камеры
     p0.Position = mul(wvPos + float4(sz, sz, 0, 0), Params.Projection);
@@ -83,10 +85,8 @@ void GSMain(point VSOutput inputPoint[1], inout TriangleStream<GSOutput> outputS
 
 float4 PSMain(GSOutput input) : SV_Target0
 {
-    float amount = length(input.Tex - float2(0.5f, 0.5f)) * 2.0f;
-    // берем текстурные координаты, вычитаем из них центр текстурных координат,   
+    float amount = length(input.Tex - float2(0.5f, 0.5f)) * 2.0f;  
     amount = smoothstep(0.0f, 1.0f, 1.0f - amount);
-    // делаем частицы кружочками с размытыми краями
     return float4(input.Color.rgb, amount);
 }
 
@@ -121,13 +121,20 @@ void CSMain
 #ifdef SIMULATION
     Particle p = particlesBufSrc.Consume();
     p.LifeTime -= Params.DeltaTimeMaxParticlesGroupdim.x;
-#ifdef ADD_GRAVITY
     if (p.LifeTime > 0)
     {
-        p.Velocity += float4(0, -200.0f * Params.DeltaTimeMaxParticlesGroupdim.x, 0, 0);         
+    #ifdef ADD_GRAVITY
+        p.Velocity += float4(0, -10.0f * Params.DeltaTimeMaxParticlesGroupdim.x, 0, 0);  
+    #endif
+        p.Position.xyz += p.Velocity * Params.DeltaTimeMaxParticlesGroupdim.x;
+        
+        float4 partPos = mul(mul(mul(float4(p.Position.xyz, 1.0f), Params.World), Params.View), Params.Projection);
+        
+        partPos = partPos / partPos.w;
+        
+        //float4 particleDepth = partPos.z
+        
+        particlesBufDst.Append(p); // переливание из буфера в буфер
     }
-#endif
-    p.Position.xyz += p.Velocity * Params.DeltaTimeMaxParticlesGroupdim.x;  
-    particlesBufDst.Append(p); // переливание из буфера в буфер
 #endif
 }

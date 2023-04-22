@@ -51,7 +51,7 @@ RenderSystem::RenderSystem()
 	D3D11_TEXTURE2D_DESC depthTexDesc = {};
 	depthTexDesc.ArraySize = 1;
 	depthTexDesc.MipLevels = 1;
-	depthTexDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	depthTexDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 	depthTexDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	depthTexDesc.CPUAccessFlags = 0;
 	depthTexDesc.MiscFlags = 0;
@@ -61,7 +61,11 @@ RenderSystem::RenderSystem()
 	depthTexDesc.SampleDesc = { 1, 0 };
 	result = device->CreateTexture2D(&depthTexDesc, nullptr, depthBuffer.GetAddressOf());
 	assert(SUCCEEDED(result));
-	result = device->CreateDepthStencilView(depthBuffer.Get(), nullptr, &depthView);
+	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+	depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	depthStencilDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	depthStencilDesc.Texture2D.MipSlice = 0;
+	result = device->CreateDepthStencilView(depthBuffer.Get(), &depthStencilDesc, &depthView);
 	assert(SUCCEEDED(result));
 
 	D3D11_BLEND_DESC BlendStateOpaqueDesc;

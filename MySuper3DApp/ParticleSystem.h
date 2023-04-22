@@ -13,21 +13,23 @@ class ParticleSystem : public Component
 public:
 
 	ID3D11Buffer *bufFirst, *bufSecond, *countBuf, *injectionBuf, *constBuf;
-	// coutBuf - используется чтобы получать количество живых или мертвых частиц
+	// countBuf - используется чтобы получать количество живых или мертвых частиц
 	// injectionBuf - с помощью его можно добавить новые частицы
 
 	ID3D11ShaderResourceView  *srvFirst, *srvSecond, *srvSrc, *srvDst;
 	ID3D11UnorderedAccessView *uavFirst, *uavSecond, *uavSrc, *uavDst, *injUav;
 	// srvFirst и srvSecond - используются для переливания
 
+	ID3D11ShaderResourceView* srvDepth;
+
 	// КУБ - ОБЛАСТЬ генерации частиц
 	Vector3 Position;
 	float Width, Height, Length;
 
-	const unsigned int MaxParticlesCount = 256; // максимальное количество частиц
-	const unsigned int MaxParticlesInjectionCount = 100;    // максимальное количество частиц, которое можно добавить за 1 кадр, не больше 100
-	UINT injectionCount = 0;                                // количество частиц, которое мы добавляем на текущем кадре
-	int particlesCount = MaxParticlesCount;                 // текущее количество частиц
+	const unsigned int MaxParticlesCount = 500;         // максимальное количество частиц
+	const unsigned int MaxParticlesInjectionCount = 100; // максимальное количество частиц, которое можно добавить за 1 кадр, не больше 100
+	UINT injectionCount = 0;                             // количество частиц, которое мы добавляем на текущем кадре
+	int particlesCount = MaxParticlesCount;              // текущее количество частиц
 
 	struct Particle         // структура, описывающая частицу
 	{

@@ -43,7 +43,7 @@ ParticleSystem::ParticleSystem()
 	Width    = 100;
 	Height   = 100;
 	Length   = 100;
-	Position = Vector3(0.0f, 0.0f, 0.0f);
+	Position = Vector3(0.0f, 100.0f, 0.0f);
 }
 
 void ParticleSystem::Initialize()
@@ -75,6 +75,13 @@ void ParticleSystem::Initialize()
 	depthDesc.StencilReadMask  = 0x00;
 	depthDesc.StencilWriteMask = 0x00;
 	Game::GetInstance()->GetRenderSystem()->device->CreateDepthStencilState(&depthDesc, &depthState);
+
+	// DEPTH
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDepthDesc;
+	srvDepthDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	srvDepthDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDepthDesc.Texture2D.MipLevels = 0;
+	Game::GetInstance()->GetRenderSystem()->device->CreateShaderResourceView(Game::GetInstance()->GetRenderSystem()->depthBuffer.Get(), &srvDepthDesc, &srvDepth);
 }
 
 void ParticleSystem::GetGroupSize(int partCount, int& groupSizeX, int& groupSizeY)
@@ -208,24 +215,18 @@ void ParticleSystem::CreateBuffers()
 	auto partsTempBuf = new Particle[MaxParticlesCount]; // создаем начальный массив частиц
 	for (int i = 0; i < MaxParticlesCount; i++)
 	{
-
-		// задаем начальную позицию, скорости
-		auto pos = Vector4(Length * RandomFloat(-1.0f, 1.0f), Height * RandomFloat(-1.0f, 1.0f), Width * RandomFloat(-1.0f, 1.0f), 1.0f);
+		auto pos = Vector4(Length * RandomFloat(-1.0f, 1.0f), Height * RandomFloat(0.2f, 1.0f), Width * RandomFloat(0.0f, 1.0f), 1.0f);
 		pos.Normalize();
-		pos = pos * 3;
-		pos.w = 1.0f;
-		auto vel = -pos * 70.0f;
+		auto vel = pos * Vector4(10.0f, 10.0f, 10.0f, 1.0f);
 		vel.w = 0.0f;
-		vel.y *= 0.01f;
-		vel.y += 100.01f;
 
 		partsTempBuf[i] = Particle // инициализируем каждую частицу
 		{
 			pos,
 			vel,
 			Vector4(RandomFloat(0.0f, 1.0f), RandomFloat(0.0f, 1.0f), RandomFloat(0.0f, 1.0f), 1.0f),
-			Vector2(1.1f, 0.5f),
-			RandomFloat(5.0f, 12.0f)
+			Vector2(0.5f, 0.5f),
+			3.0f
 		};
 	}
 
@@ -350,37 +351,40 @@ void ParticleSystem::Update(float deltaTime)
 		Game::GetInstance()->GetRenderSystem()->context->Dispatch(groupSizeX, groupSizeY, 1);
 	}
 
-	/*
-	srand(time(NULL));
-	for (int i = 0; i < 100; i++)
+	if (particlesCount < MaxParticlesCount)
 	{
-		// задаем начальную позицию, скорости
-		auto pos = Vector4(Length * RandomFloat(-1.0f, 1.0f), Height * RandomFloat(-1.0f, 1.0f), Width * RandomFloat(-1.0f, 1.0f), 1.0f);
-		pos.Normalize();
-		pos = pos * 3;
-		pos.w = 1.0f;
-		auto vel = -pos * 70.0f;
-		vel.w = 0.0f;
-		vel.y *= 0.01f;
-		vel.y += 100.01f;
-
-		injectionParticles[i] = Particle
+		int partToAdd;
+		if (MaxParticlesCount - particlesCount > MaxParticlesInjectionCount)
 		{
-			pos,
-			vel,
-			Vector4(RandomFloat(0.0f, 1.0f), RandomFloat(0.0f, 1.0f), RandomFloat(0.0f, 1.0f), 1.0f),
-			Vector2(1.1f, 0.5f),
-			RandomFloat(5.0f, 12.0f)
-		};
+			partToAdd = MaxParticlesInjectionCount;
+		}
+		else
+		{
+			partToAdd = MaxParticlesCount - particlesCount;
+		}
+		for (int i = 0; i < partToAdd; i++)
+		{
+			// задаем начальную позицию, скорости
+			auto pos = Vector4(Length * RandomFloat(-1.0f, 1.0f), Height * RandomFloat(0.2f, 1.0f), Width * RandomFloat(-1.0f, 1.0f), 1.0f);
+			pos.Normalize();
+			auto vel = pos * Vector4(10.0f, 10.0f, 10.0f, 1.0f);
+			vel.w = 0.0f;
+
+			injectionParticles[i] = Particle // инициализируем каждую частицу
+			{
+				pos,
+				vel,
+				Vector4(RandomFloat(0.0f, 1.0f), RandomFloat(0.0f, 1.0f), RandomFloat(0.0f, 1.0f), 1.0f),
+				Vector2(0.5f, 0.5f),
+				3.0f
+			};
+		}
+		injectionCount = partToAdd;
 	}
-	//injectionCount = 100;
-	*/
 
 	// add new points if any
 	if (injectionCount > 0)
 	{
-		Game::GetInstance()->GetRenderSystem()->context->CSSetConstantBuffers(0, 1, nullptr);
-		// Group size InjectionCount
 		int injSizeX, injSizeY;
 		GetGroupSize(injectionCount, injSizeX, injSizeY);
 		constData.DeltaTimeMaxParticlesGroupdim = Vector4(deltaTime, injectionCount, injSizeY, 0);
@@ -388,8 +392,8 @@ void ParticleSystem::Update(float deltaTime)
 		Game::GetInstance()->GetRenderSystem()->context->CSSetConstantBuffers(0, 1, &constBuf);
 
 		Game::GetInstance()->GetRenderSystem()->context->UpdateSubresource(injectionBuf, 0, nullptr, injectionParticles, 0, 0);
-
 		Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &injUav, &injectionCount);
+
 		Game::GetInstance()->GetRenderSystem()->context->CSSetShader(ComputeShaders[ComputeFlags::INJECTION], nullptr, 0);
 
 		Game::GetInstance()->GetRenderSystem()->context->Dispatch(injSizeX, injSizeY, 1);
@@ -442,6 +446,8 @@ void ParticleSystem::Draw(float deltaTime)
 
 	Game::GetInstance()->GetRenderSystem()->context->GSSetConstantBuffers(0, 1, &constBuf);
 	Game::GetInstance()->GetRenderSystem()->context->GSSetShaderResources(0, 1, &srvSrc);
+
+	Game::GetInstance()->GetRenderSystem()->context->CSSetShaderResources(1, 1, &srvDepth); //////
 
 	Game::GetInstance()->GetRenderSystem()->context->Draw(particlesCount, 0);
 
