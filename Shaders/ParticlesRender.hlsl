@@ -76,8 +76,8 @@ void GSMain(point VSOutput inputPoint[1], inout TriangleStream<GSOutput> outputS
     // Добавление вершины (вертексы)
     outputStream.Append(p0);
     outputStream.Append(p1);
-    outputStream.Append(p2);
     outputStream.Append(p3);
+    outputStream.Append(p2);
 }
 
 
@@ -111,7 +111,7 @@ void CSMain
     }
 
 #ifdef INJECTION
-    Particle p  = particlesBufSrc.Consume(); // читаем последнюю вершину, которая в нём хранится; уменьшаем наш счетчик на единицу
+    Particle p  = particlesBufSrc.Consume();
     if (p.LifeTime > 0)
     {
         particlesBufDst.Append(p);
@@ -119,15 +119,15 @@ void CSMain
 #endif
     
 #ifdef SIMULATION
-    Particle p = particlesBufSrc.Consume(); // берем частицу 
-    p.LifeTime -= Params.DeltaTimeMaxParticlesGroupdim.x; // вычитаем из её времени жизни deltaTime
-    if (p.LifeTime > 0) // если время жизни >0 (частица ещё жива), то:
+    Particle p = particlesBufSrc.Consume();
+    p.LifeTime -= Params.DeltaTimeMaxParticlesGroupdim.x;
+#ifdef ADD_GRAVITY
+    if (p.LifeTime > 0)
     {
-    #ifdef ADD_GRAVITY
-        p.Velocity += float4(0, -9.8f * Params.DeltaTimeMaxParticlesGroupdim.x, 0, 0); // добавляем гравитацию
-    #endif           
-    }  
+        p.Velocity += float4(0, -200.0f * Params.DeltaTimeMaxParticlesGroupdim.x, 0, 0);         
+    }
+#endif
     p.Position.xyz += p.Velocity * Params.DeltaTimeMaxParticlesGroupdim.x;  
-    particlesBufDst.Append(p); // переливание из буфера в буфер (живые <-> мертвые)
+    particlesBufDst.Append(p); // переливание из буфера в буфер
 #endif
 }

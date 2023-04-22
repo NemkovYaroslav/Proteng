@@ -78,6 +78,6 @@ public:
 
 	void LoadShaders(std::string shaderFileName);
 	void CreateBuffers();
-	void AddParticle(const Particle& p);
+	void AddParticle(const Particle* p);
 };
 

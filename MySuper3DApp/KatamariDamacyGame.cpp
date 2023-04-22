@@ -134,6 +134,7 @@ void KatamariDamacyGame::Initialize()
 	particleSystem->CreateMesh(0.2f, "../Textures/LampAlbedo.png", "../Models/lamp.obj");
 	particleSystem->transformComponent->SetPosition(Vector3(0.0f, 0.5f, 12.0f));
 	ParticleSystem* particleSystemComponent = new ParticleSystem();
+	particleSystemComponent->Position = particleSystem->transformComponent->GetPosition();
 	particleSystem->AddComponent(particleSystemComponent);
 	Game::GetInstance()->currentParticleSystem = particleSystemComponent;
 	Game::GetInstance()->AddGameObject(particleSystem);

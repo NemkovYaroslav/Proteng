@@ -14,6 +14,11 @@ float RandomFloat(float min, float max)
 	return ((float)rand() / RAND_MAX) * (max - min) + min;
 }
 
+float RandomInt(int min, int max)
+{
+	return min + (rand() % static_cast<int>(max - min + 1));
+}
+
 template<typename T>
 std::vector<D3D_SHADER_MACRO> GetMacros(T flags)
 {
@@ -209,7 +214,7 @@ void ParticleSystem::CreateBuffers()
 		pos.Normalize();
 		pos = pos * 3;
 		pos.w = 1.0f;
-		auto vel = -pos * 70.01f;
+		auto vel = -pos * 70.0f;
 		vel.w = 0.0f;
 		vel.y *= 0.01f;
 		vel.y += 100.01f;
@@ -301,7 +306,7 @@ void ParticleSystem::CreateBuffers()
 	Game::GetInstance()->GetRenderSystem()->device->CreateUnorderedAccessView(injectionBuf, &injUavDesc, &injUav);
 }
 
-void ParticleSystem::AddParticle(const Particle& p)
+void ParticleSystem::AddParticle(const Particle* p)
 {
 
 }
@@ -345,11 +350,36 @@ void ParticleSystem::Update(float deltaTime)
 		Game::GetInstance()->GetRenderSystem()->context->Dispatch(groupSizeX, groupSizeY, 1);
 	}
 
+	/*
+	srand(time(NULL));
+	for (int i = 0; i < 100; i++)
+	{
+		// задаем начальную позицию, скорости
+		auto pos = Vector4(Length * RandomFloat(-1.0f, 1.0f), Height * RandomFloat(-1.0f, 1.0f), Width * RandomFloat(-1.0f, 1.0f), 1.0f);
+		pos.Normalize();
+		pos = pos * 3;
+		pos.w = 1.0f;
+		auto vel = -pos * 70.0f;
+		vel.w = 0.0f;
+		vel.y *= 0.01f;
+		vel.y += 100.01f;
+
+		injectionParticles[i] = Particle
+		{
+			pos,
+			vel,
+			Vector4(RandomFloat(0.0f, 1.0f), RandomFloat(0.0f, 1.0f), RandomFloat(0.0f, 1.0f), 1.0f),
+			Vector2(1.1f, 0.5f),
+			RandomFloat(5.0f, 12.0f)
+		};
+	}
+	//injectionCount = 100;
+	*/
+
 	// add new points if any
 	if (injectionCount > 0)
 	{
 		Game::GetInstance()->GetRenderSystem()->context->CSSetConstantBuffers(0, 1, nullptr);
-
 		// Group size InjectionCount
 		int injSizeX, injSizeY;
 		GetGroupSize(injectionCount, injSizeX, injSizeY);
@@ -360,7 +390,7 @@ void ParticleSystem::Update(float deltaTime)
 		Game::GetInstance()->GetRenderSystem()->context->UpdateSubresource(injectionBuf, 0, nullptr, injectionParticles, 0, 0);
 
 		Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &injUav, &injectionCount);
-		Game::GetInstance()->GetRenderSystem()->context->CSSetShader(ComputeShaders[ComputeFlags::INJECTION], nullptr, 0); //???????//
+		Game::GetInstance()->GetRenderSystem()->context->CSSetShader(ComputeShaders[ComputeFlags::INJECTION], nullptr, 0);
 
 		Game::GetInstance()->GetRenderSystem()->context->Dispatch(injSizeX, injSizeY, 1);
 
