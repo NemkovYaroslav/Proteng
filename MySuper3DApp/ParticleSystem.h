@@ -16,19 +16,20 @@ public:
 	// coutBuf - используется чтобы получать количество живых или мертвых частиц
 	// injectionBuf - с помощью его можно добавить новые частицы
 
-	ID3D11ShaderResourceView *srvFirst, *srvSecond, *srvSrc, *srvDst;
+	ID3D11ShaderResourceView  *srvFirst, *srvSecond, *srvSrc, *srvDst;
 	ID3D11UnorderedAccessView *uavFirst, *uavSecond, *uavSrc, *uavDst, *injUav;
 	// srvFirst и srvSecond - используются для переливания
 
+	// КУБ - ОБЛАСТЬ генерации частиц
 	Vector3 Position;
 	float Width, Height, Length;
 
-	const unsigned int MaxParticlesCount = 256 * 256 * 128; // максимальное количество частиц
+	const unsigned int MaxParticlesCount = 256; // максимальное количество частиц
 	const unsigned int MaxParticlesInjectionCount = 100;    // максимальное количество частиц, которое можно добавить за 1 кадр, не больше 100
 	UINT injectionCount = 0;                                // количество частиц, которое мы добавляем на текущем кадре
-	int ParticlesCount = MaxParticlesCount;                 // текущее количество частиц
+	int particlesCount = MaxParticlesCount;                 // текущее количество частиц
 
-	struct Particle // структура, описывающая частицу
+	struct Particle         // структура, описывающая частицу
 	{
 		Vector4 Position;   // позиция частицы
 		Vector4 Velocity;   // скорость частицы
@@ -42,7 +43,7 @@ public:
 		Matrix World;                          // матрица мировой позиции
 		Matrix View;                           // матрица вида камеры
 		Matrix Projection;                     // матрица проекции камеры
-		Vector4 DeltaTimeMaxParticlesGroupdim; // tick, максимальное количество частиц, что-то...
+		Vector4 DeltaTimeMaxParticlesGroupdim; // tick, максимальное количество частиц, группа
 	};
 
 	enum class ComputeFlags
@@ -56,7 +57,7 @@ public:
 
 	ConstData constData;
 
-	Particle* injectionParticles = new Particle[MaxParticlesInjectionCount]; // банк частиц
+	Particle* injectionParticles = new Particle[MaxParticlesInjectionCount]; // банк добавляемых частиц
 
 	ID3D11VertexShader*   vertShader; // для отрисовки частиц
 	ID3D11GeometryShader* geomShader; // для отрисовки частиц

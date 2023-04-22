@@ -25,13 +25,13 @@ AppendStructuredBuffer<Particle>  particlesBufDst : register(u1);
 
 struct VSOutput
 {
-    int vertexID : TEXCOORD0; // VertexID на выход
+    int vertexID : TEXCOORD0;
 };
 // т.к. вертексов у нас нет, мы можем получить текущий ID вертекса при рисовании без использования Vertex Buffer
 VSOutput VSMain(uint vertexID : SV_VertexID) // вершинный шейдер на вход получает VertexID
 {
     VSOutput output;
-    output.vertexID = vertexID; // отправляет VertexID на выход
+    output.vertexID = vertexID; // отправяем на выход
     return output;
 }
 
@@ -48,34 +48,34 @@ void GSMain(point VSOutput inputPoint[1], inout TriangleStream<GSOutput> outputS
     
     Particle prt = renderBufSrc[inputPoint[0].vertexID]; // берем нашу частицу из хранилища частиц
     
-    float sz = prt.Size0Size1.x; // высчитываем значение Size'а
-    float4 color = prt.Color0;   // берем цвет
+    float sz     = prt.Size0Size1.x; // высчитываем значение Size'а
+    float4 color = prt.Color0;       // берем цвет
     
-    float4 wvPos = prt.Position;                     // это WorldViewPosition
-    wvPos = mul(float4(wvPos.xyz, 1), Params.World); // World матрица нашей Particle System'ы
+    float4 wvPos = prt.Position;
+    wvPos = mul(float4(wvPos.xyz, 1), Params.World);
     wvPos = mul(float4(wvPos.xyz, 1), Params.View);
     wvPos = float4(wvPos.xyz, 1.0f);                 // получаем WorldViewPosition в пространстве камеры
     
     // немного растягиваем 4 точки по пространству камеры
     p0.Position = mul(wvPos + float4(sz, sz, 0, 0), Params.Projection);
-    p0.Tex = float2(1, 1);
-    p0.Color = color;
+    p0.Tex      = float2(1, 1);
+    p0.Color    = color;
     
     p1.Position = mul(wvPos + float4(-sz, sz, 0, 0), Params.Projection);
-    p1.Tex = float2(0, 1);
-    p1.Color = color;
+    p1.Tex      = float2(0, 1);
+    p1.Color    = color;
     
     p2.Position = mul(wvPos + float4(-sz, -sz, 0, 0), Params.Projection);
-    p2.Tex = float2(0, 0);
-    p2.Color = color;
+    p2.Tex      = float2(0, 0);
+    p2.Color    = color;
     
     p3.Position = mul(wvPos + float4(sz, -sz, 0, 0), Params.Projection);
-    p3.Tex = float2(1, 0);
-    p3.Color = color;
+    p3.Tex      = float2(1, 0);
+    p3.Color    = color;
     
     // Добавление вершины (вертексы)
-    outputStream.Append(p1);
     outputStream.Append(p0);
+    outputStream.Append(p1);
     outputStream.Append(p2);
     outputStream.Append(p3);
 }
