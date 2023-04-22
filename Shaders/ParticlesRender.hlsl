@@ -112,7 +112,7 @@ void CSMain
 
 #ifdef INJECTION
     Particle p  = particlesBufSrc.Consume(); // читаем последнюю вершину, которая в нём хранится; уменьшаем наш счетчик на единицу
-    if (p.LifeTime > 0) // если >0 мейби сгенерировали дохлую частицу
+    if (p.LifeTime > 0)
     {
         particlesBufDst.Append(p);
     }   
@@ -120,7 +120,7 @@ void CSMain
     
 #ifdef SIMULATION
     Particle p = particlesBufSrc.Consume(); // берем частицу 
-    p.LifeTime -= Params.DeltaTimeMaxParticlesGroupdim.x; // вычитаем из неё deltaTime
+    p.LifeTime -= Params.DeltaTimeMaxParticlesGroupdim.x; // вычитаем из её времени жизни deltaTime
     if (p.LifeTime > 0) // если время жизни >0 (частица ещё жива), то:
     {
     #ifdef ADD_GRAVITY

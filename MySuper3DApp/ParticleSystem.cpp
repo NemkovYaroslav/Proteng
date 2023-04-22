@@ -345,7 +345,6 @@ void ParticleSystem::Update(float deltaTime)
 	const UINT counterZero      = 0;
 	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &uavSrc, &counterKeepValue); // читаем частицы, сохраняем позиции точек через -1
 	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(1, 1, &uavDst, &counterZero);      // сюда записываем поэтому ставим 0
-
 	Game::GetInstance()->GetRenderSystem()->context->CSSetShader(ComputeShaders[ComputeFlags::SIMULATION | ComputeFlags::ADD_GRAVITY], nullptr, 0); //???????//
 
 	if (groupSizeX > 0)
@@ -384,14 +383,14 @@ void ParticleSystem::Update(float deltaTime)
 
 	D3D11_MAPPED_SUBRESOURCE subresource;
 	Game::GetInstance()->GetRenderSystem()->context->Map(countBuf, 0, D3D11_MAP_READ, 0, &subresource);
-
 	UINT* data = reinterpret_cast<UINT*>(subresource.pData);
 	ParticlesCount = data[0];
+
 	Game::GetInstance()->GetRenderSystem()->context->Unmap(countBuf, 0);
 
 	SwapBuffers();
 
-	std::cout << "UPDATE" << std::endl;
+	std::cout << data[0] << std::endl;
 }
 
 void ParticleSystem::Draw(float deltaTime)
@@ -428,6 +427,4 @@ void ParticleSystem::Draw(float deltaTime)
 	Game::GetInstance()->GetRenderSystem()->context->OMSetBlendState(oldBlend, old_blend_factor, oldMask);
 	Game::GetInstance()->GetRenderSystem()->context->RSSetState(oldState);
 	Game::GetInstance()->GetRenderSystem()->context->OMSetDepthStencilState(oldDepthState, oldStenBuf);
-
-	std::cout << "DRAW" << std::endl;
 }
