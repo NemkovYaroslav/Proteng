@@ -226,7 +226,7 @@ void ParticleSystem::CreateBuffers()
 			vel,
 			Vector4(RandomFloat(0.0f, 1.0f), RandomFloat(0.0f, 1.0f), RandomFloat(0.0f, 1.0f), 1.0f),
 			Vector2(0.5f, 0.5f),
-			3.0f
+			2.5f
 		};
 	}
 
@@ -376,7 +376,7 @@ void ParticleSystem::Update(float deltaTime)
 				vel,
 				Vector4(RandomFloat(0.0f, 1.0f), RandomFloat(0.0f, 1.0f), RandomFloat(0.0f, 1.0f), 1.0f),
 				Vector2(0.5f, 0.5f),
-				3.0f
+				2.5f
 			};
 		}
 		injectionCount = partToAdd;

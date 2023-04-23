@@ -118,7 +118,7 @@ void CSMain
     }   
 #endif
     
-#ifdef SIMULATION
+//#ifdef SIMULATION
     Particle p = particlesBufSrc.Consume();
     p.LifeTime -= Params.DeltaTimeMaxParticlesGroupdim.x;
     if (p.LifeTime > 0)
@@ -128,13 +128,15 @@ void CSMain
     #endif
         p.Position.xyz += p.Velocity * Params.DeltaTimeMaxParticlesGroupdim.x;
         
-        float4 partPos = mul(mul(mul(float4(p.Position.xyz, 1.0f), Params.World), Params.View), Params.Projection);
         
+        float4 partPos = mul(mul(mul(float4(p.Position.xyz, 1.0f), Params.World), Params.View), Params.Projection);      
         partPos = partPos / partPos.w;
+        float particleDepth   = partPos.z;       
+        float2 particleUVCoord = (partPos.xy + float2(1.0f, 1.0f)) / 2;
         
-        //float4 particleDepth = partPos.z
+        
         
         particlesBufDst.Append(p); // переливание из буфера в буфер
     }
-#endif
+//#endif
 }
