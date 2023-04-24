@@ -19,11 +19,29 @@ cbuffer CB1 : register(b0)
     ConstParams Params;
 }
 
-StructuredBuffer<Particle>        renderBufSrc    : register(t0); // буфер частиц
 ConsumeStructuredBuffer<Particle> particlesBufSrc : register(u0);
 AppendStructuredBuffer<Particle>  particlesBufDst : register(u1);
 
-Texture2D DepthMap : register(t1);
+// GBUFFER
+Texture2D NormalMap   : register(t0);
+Texture2D WorldPosMap : register(t1);
+struct GBufferData
+{
+    float3 Normal;
+    float3 WorldPos;
+};
+GBufferData ReadGBuffer(float2 screenPos)
+{
+    GBufferData buf = (GBufferData) 0;
+    buf.WorldPos    = WorldPosMap.Load(float3(screenPos, 0)).xyz;
+    buf.Normal      = NormalMap.Load(float3(screenPos, 0)).xyz;    
+    return buf;
+}
+// DEPTH MAP
+Texture2D DepthMap : register(t2);
+
+// PARTICLE MASS FOR GS
+StructuredBuffer<Particle> renderBufSrc : register(t3); // буфер частиц
 
 struct VSOutput
 {
@@ -118,7 +136,7 @@ void CSMain
     }   
 #endif
     
-//#ifdef SIMULATION
+#ifdef SIMULATION
     Particle p = particlesBufSrc.Consume();
     p.LifeTime -= Params.DeltaTimeMaxParticlesGroupdim.x;
     if (p.LifeTime > 0)
@@ -126,17 +144,28 @@ void CSMain
     #ifdef ADD_GRAVITY
         p.Velocity += float4(0, -10.0f * Params.DeltaTimeMaxParticlesGroupdim.x, 0, 0);  
     #endif
-        p.Position.xyz += p.Velocity * Params.DeltaTimeMaxParticlesGroupdim.x;
+        p.Position.xyz += p.Velocity * Params.DeltaTimeMaxParticlesGroupdim.x;     
         
+        float4 partPos  = mul(mul(mul(float4(p.Position.xyz, 1.0f), Params.World), Params.View), Params.Projection);
+        partPos         = partPos / partPos.w;
+        float partDepth = partPos.z;   
         
-        float4 partPos = mul(mul(mul(float4(p.Position.xyz, 1.0f), Params.World), Params.View), Params.Projection);      
-        partPos = partPos / partPos.w;
-        float particleDepth   = partPos.z;       
         float2 particleUVCoord = (partPos.xy + float2(1.0f, 1.0f)) / 2;
-        
-        
-        
+        particleUVCoord.y = 1.0f - particleUVCoord.y;
+        particleUVCoord.xy *= float2(1200, 1200);
+    
+        float3 Normal   = NormalMap.Load(float3(particleUVCoord.xy, 0));   // это для того, чтобы проверить передается ли GBuffer
+        float3 WorldPos = WorldPosMap.Load(float3(particleUVCoord.xy, 0)); // это для того, чтобы проверить передается ли GBuffer
+        float  depthVal = DepthMap.Load(float3(particleUVCoord.xy, 0));
+                
+        float3 temp = WorldPos.xyz - Normal.xyz; // это для того, чтобы проверить передается ли GBuffer
+        if (partDepth < depthVal)
+        {
+            p.Velocity *= -1;
+            p.Velocity += float4(temp.xyz, 1.0f); // это для того, чтобы проверить передается ли GBuffer
+        }
+    
         particlesBufDst.Append(p); // переливание из буфера в буфер
     }
-//#endif
+#endif
 }

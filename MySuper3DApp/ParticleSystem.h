@@ -20,14 +20,12 @@ public:
 	ID3D11UnorderedAccessView *uavFirst, *uavSecond, *uavSrc, *uavDst, *injUav;
 	// srvFirst и srvSecond - используются для переливания
 
-	ID3D11ShaderResourceView* srvDepth;
-
 	// КУБ - ОБЛАСТЬ генерации частиц
 	Vector3 Position;
 	float Width, Height, Length;
 
-	const unsigned int MaxParticlesCount = 500;         // максимальное количество частиц
-	const unsigned int MaxParticlesInjectionCount = 100; // максимальное количество частиц, которое можно добавить за 1 кадр, не больше 100
+	const unsigned int MaxParticlesCount = 512;          // максимальное количество частиц
+	const unsigned int MaxParticlesInjectionCount = 128; // максимальное количество частиц, которое можно добавить за 1 кадр, не больше 100
 	UINT injectionCount = 0;                             // количество частиц, которое мы добавляем на текущем кадре
 	int particlesCount = MaxParticlesCount;              // текущее количество частиц
 
@@ -80,6 +78,5 @@ public:
 
 	void LoadShaders(std::string shaderFileName);
 	void CreateBuffers();
-	void AddParticle(const Particle* p);
 };
 

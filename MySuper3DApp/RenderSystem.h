@@ -63,4 +63,6 @@ public:
 	ID3D11PixelShader*  psLightingPoi;
 
 	std::vector<RenderComponent*> renderComponents;
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srvDepth;
 };

@@ -4,6 +4,7 @@
 #include "GameObject.h"
 #include "TransformComponent.h"
 #include "CameraComponent.h"
+#include "GBuffer.h"
 
 #include <iostream>
 #include <random>
@@ -43,7 +44,7 @@ ParticleSystem::ParticleSystem()
 	Width    = 100;
 	Height   = 100;
 	Length   = 100;
-	Position = Vector3(0.0f, 100.0f, 0.0f);
+	Position = Vector3(0.0f, 0.0f, 0.0f);
 }
 
 void ParticleSystem::Initialize()
@@ -54,7 +55,8 @@ void ParticleSystem::Initialize()
 	D3D11_RASTERIZER_DESC rastDesc = {};
 	rastDesc.CullMode = D3D11_CULL_BACK;
 	rastDesc.FillMode = D3D11_FILL_SOLID;
-	Game::GetInstance()->GetRenderSystem()->device->CreateRasterizerState(&rastDesc, &rastState);
+	auto result = Game::GetInstance()->GetRenderSystem()->device->CreateRasterizerState(&rastDesc, &rastState);
+	assert(SUCCEEDED(result));
 
 	auto blendStateDesc = D3D11_BLEND_DESC{false, false};
 	blendStateDesc.RenderTarget[0].BlendEnable           = TRUE;
@@ -65,7 +67,8 @@ void ParticleSystem::Initialize()
 	blendStateDesc.RenderTarget[0].DestBlend             = D3D11_BLEND_ONE;
 	blendStateDesc.RenderTarget[0].SrcBlendAlpha         = D3D11_BLEND_ZERO;
 	blendStateDesc.RenderTarget[0].DestBlendAlpha        = D3D11_BLEND_ONE;
-	Game::GetInstance()->GetRenderSystem()->device->CreateBlendState(&blendStateDesc, &blendState);
+	result = Game::GetInstance()->GetRenderSystem()->device->CreateBlendState(&blendStateDesc, &blendState);
+	assert(SUCCEEDED(result));
 
 	auto depthDesc = D3D11_DEPTH_STENCIL_DESC {};
 	depthDesc.DepthEnable      = TRUE;
@@ -74,14 +77,8 @@ void ParticleSystem::Initialize()
 	depthDesc.DepthWriteMask   = D3D11_DEPTH_WRITE_MASK_ZERO;
 	depthDesc.StencilReadMask  = 0x00;
 	depthDesc.StencilWriteMask = 0x00;
-	Game::GetInstance()->GetRenderSystem()->device->CreateDepthStencilState(&depthDesc, &depthState);
-
-	// DEPTH
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDepthDesc;
-	srvDepthDesc.Format = DXGI_FORMAT_R32_FLOAT;
-	srvDepthDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	srvDepthDesc.Texture2D.MipLevels = 0;
-	Game::GetInstance()->GetRenderSystem()->device->CreateShaderResourceView(Game::GetInstance()->GetRenderSystem()->depthBuffer.Get(), &srvDepthDesc, &srvDepth);
+	result = Game::GetInstance()->GetRenderSystem()->device->CreateDepthStencilState(&depthDesc, &depthState);
+	assert(SUCCEEDED(result));
 }
 
 void ParticleSystem::GetGroupSize(int partCount, int& groupSizeX, int& groupSizeY)
@@ -104,7 +101,7 @@ void ParticleSystem::LoadShaders(std::string shaderFileName)
 		nullptr,
 		"VSMain",
 		"vs_5_0",
-		D3DCOMPILE_PACK_MATRIX_ROW_MAJOR,
+		D3DCOMPILE_PACK_MATRIX_ROW_MAJOR | D3DCOMPILE_DEBUG,
 		0,
 		vertexShaderByteCode.GetAddressOf(),
 		&errorCode
@@ -136,7 +133,7 @@ void ParticleSystem::LoadShaders(std::string shaderFileName)
 		nullptr,
 		"GSMain",
 		"gs_5_0",
-		D3DCOMPILE_PACK_MATRIX_ROW_MAJOR,
+		D3DCOMPILE_PACK_MATRIX_ROW_MAJOR | D3DCOMPILE_DEBUG,
 		0,
 		geometryShaderByteCode.GetAddressOf(),
 		&errorCode
@@ -155,7 +152,7 @@ void ParticleSystem::LoadShaders(std::string shaderFileName)
 		nullptr,
 		"PSMain",
 		"ps_5_0",
-		D3DCOMPILE_PACK_MATRIX_ROW_MAJOR,
+		D3DCOMPILE_PACK_MATRIX_ROW_MAJOR | D3DCOMPILE_DEBUG,
 		0,
 		pixelShaderByteCode.GetAddressOf(),
 		&errorCode
@@ -184,7 +181,7 @@ void ParticleSystem::LoadShaders(std::string shaderFileName)
 			nullptr,
 			"CSMain",
 			"cs_5_0",
-			D3DCOMPILE_PACK_MATRIX_ROW_MAJOR,
+			D3DCOMPILE_PACK_MATRIX_ROW_MAJOR | D3DCOMPILE_DEBUG,
 			0,
 			computerShaderByteCode.GetAddressOf(),
 			&errorCode
@@ -209,13 +206,14 @@ void ParticleSystem::CreateBuffers()
 	constBufDesc.MiscFlags      = 0;
 	constBufDesc.CPUAccessFlags = 0;
 	constBufDesc.ByteWidth      = sizeof(ConstData);
-	Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&constBufDesc, nullptr, &constBuf);
+	auto result = Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&constBufDesc, nullptr, &constBuf);
+	assert(SUCCEEDED(result));
 
 	srand(time(NULL));
 	auto partsTempBuf = new Particle[MaxParticlesCount]; // создаем начальный массив частиц
 	for (int i = 0; i < MaxParticlesCount; i++)
 	{
-		auto pos = Vector4(Length * RandomFloat(-1.0f, 1.0f), Height * RandomFloat(0.2f, 1.0f), Width * RandomFloat(0.0f, 1.0f), 1.0f);
+		auto pos = Vector4(Length * RandomFloat(-1.0f, 1.0f), Height * 2.0f, Width * RandomFloat(0.0f, 1.0f), 1.0f);
 		pos.Normalize();
 		auto vel = pos * Vector4(10.0f, 10.0f, 10.0f, 1.0f);
 		vel.w = 0.0f;
@@ -242,13 +240,17 @@ void ParticleSystem::CreateBuffers()
 	data.pSysMem          = &partsTempBuf[0];
 	data.SysMemPitch      = 0;
 	data.SysMemSlicePitch = 0;
-	Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&bufDesc,  &data,  &bufFirst);
-	Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&bufDesc, nullptr, &bufSecond);
+	result = Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&bufDesc,  &data,  &bufFirst);
+	assert(SUCCEEDED(result));
+	result = Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&bufDesc, nullptr, &bufSecond);
+	assert(SUCCEEDED(result));
 	delete[] partsTempBuf;
 
 	// SHADER RESOURCE VIEW
-	Game::GetInstance()->GetRenderSystem()->device->CreateShaderResourceView(bufFirst,  nullptr, &srvFirst);
-	Game::GetInstance()->GetRenderSystem()->device->CreateShaderResourceView(bufSecond, nullptr, &srvSecond);
+	result = Game::GetInstance()->GetRenderSystem()->device->CreateShaderResourceView(bufFirst,  nullptr, &srvFirst);
+	assert(SUCCEEDED(result));
+	result = Game::GetInstance()->GetRenderSystem()->device->CreateShaderResourceView(bufSecond, nullptr, &srvSecond);
+	assert(SUCCEEDED(result));
 
 	// UNORDERED ACCESS VIEW
 	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
@@ -260,8 +262,10 @@ void ParticleSystem::CreateBuffers()
 		MaxParticlesCount,           // количество элементов
 		D3D11_BUFFER_UAV_FLAG_APPEND // флаг
 	};
-	Game::GetInstance()->GetRenderSystem()->device->CreateUnorderedAccessView(bufFirst,  &uavDesc, &uavFirst);
-	Game::GetInstance()->GetRenderSystem()->device->CreateUnorderedAccessView(bufSecond, &uavDesc, &uavSecond);
+	result = Game::GetInstance()->GetRenderSystem()->device->CreateUnorderedAccessView(bufFirst,  &uavDesc, &uavFirst);
+	assert(SUCCEEDED(result));
+	result = Game::GetInstance()->GetRenderSystem()->device->CreateUnorderedAccessView(bufSecond, &uavDesc, &uavSecond);
+	assert(SUCCEEDED(result));
 
 	// т.к. дальше будем менять местами буфферы, то делаем перенастройку
 	srvSrc = srvFirst;
@@ -282,7 +286,8 @@ void ParticleSystem::CreateBuffers()
 	countBufDesc.MiscFlags           = 0;
 	countBufDesc.StructureByteStride = 0;
 	countBufDesc.ByteWidth           = 4; // в 1 int'е 4 байта
-	Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&countBufDesc, nullptr, &countBuf);
+	result = Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&countBufDesc, nullptr, &countBuf);
+	assert(SUCCEEDED(result));
 
 	// буфер для добавления частиц за 1 кадр
 	D3D11_BUFFER_DESC injBufDesc;
@@ -292,7 +297,8 @@ void ParticleSystem::CreateBuffers()
 	injBufDesc.CPUAccessFlags      = 0;
 	injBufDesc.StructureByteStride = sizeof(Particle);
 	injBufDesc.ByteWidth           = MaxParticlesInjectionCount * sizeof(Particle);
-	Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&injBufDesc, nullptr, &injectionBuf);
+	result = Game::GetInstance()->GetRenderSystem()->device->CreateBuffer(&injBufDesc, nullptr, &injectionBuf);
+	assert(SUCCEEDED(result));
 
 	// UNORDERED ACCESS VIEW для INJECTION
 	D3D11_UNORDERED_ACCESS_VIEW_DESC injUavDesc;
@@ -304,12 +310,8 @@ void ParticleSystem::CreateBuffers()
 		MaxParticlesInjectionCount,
 		D3D11_BUFFER_UAV_FLAG_APPEND
 	};
-	Game::GetInstance()->GetRenderSystem()->device->CreateUnorderedAccessView(injectionBuf, &injUavDesc, &injUav);
-}
-
-void ParticleSystem::AddParticle(const Particle* p)
-{
-
+	result = Game::GetInstance()->GetRenderSystem()->device->CreateUnorderedAccessView(injectionBuf, &injUavDesc, &injUav);
+	assert(SUCCEEDED(result));
 }
 
 void ParticleSystem::SwapBuffers()
@@ -318,7 +320,9 @@ void ParticleSystem::SwapBuffers()
 	std::swap(uavSrc, uavDst);
 }
 
-void ParticleSystem::Update(float deltaTime)
+void ParticleSystem::Update(float deltaTime) {}
+
+void ParticleSystem::Draw(float deltaTime)
 {
 	if (Game::GetInstance()->inputDevice->IsKeyDown(Keys::V))
 	{
@@ -335,17 +339,25 @@ void ParticleSystem::Update(float deltaTime)
 	GetGroupSize(particlesCount, groupSizeX, groupSizeY);
 	constData.DeltaTimeMaxParticlesGroupdim = Vector4(deltaTime, particlesCount, groupSizeY, 0);
 	Game::GetInstance()->GetRenderSystem()->context->UpdateSubresource(constBuf, 0, nullptr, &constData, 0, 0);
-	// update points positions, remove too old
 	Game::GetInstance()->GetRenderSystem()->context->CSSetConstantBuffers(0, 1, &constBuf);
 
 	const UINT counterKeepValue = -1;
-	const UINT counterZero      = 0;
+	const UINT counterZero = 0;
 	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &uavSrc, &counterKeepValue); // читаем частицы, сохраняем счетчик через -1 // particlesBufSrc
 	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(1, 1, &uavDst, &counterZero);      // сюда записываем поэтому ставим 0           // particlesBufDst
 
+	// GBUFFER
+	ID3D11ShaderResourceView* resources[] = {
+		Game::GetInstance()->GetRenderSystem()->gBuffer->normalSRV,
+		Game::GetInstance()->GetRenderSystem()->gBuffer->worldPositionSRV
+	};
+	Game::GetInstance()->GetRenderSystem()->context->CSSetShaderResources(0, 2, resources);
+	// DEPTHMAP
+
+	Game::GetInstance()->GetRenderSystem()->context->CSSetShaderResources(2, 1, Game::GetInstance()->GetRenderSystem()->srvDepth.GetAddressOf());
+	
 	Game::GetInstance()->GetRenderSystem()->context->CSSetShader(ComputeShaders[ComputeFlags::SIMULATION | ComputeFlags::ADD_GRAVITY], nullptr, 0);
 
-	// если ещё есть необработанные частицы
 	if (groupSizeX > 0)
 	{
 		Game::GetInstance()->GetRenderSystem()->context->Dispatch(groupSizeX, groupSizeY, 1);
@@ -365,7 +377,7 @@ void ParticleSystem::Update(float deltaTime)
 		for (int i = 0; i < partToAdd; i++)
 		{
 			// задаем начальную позицию, скорости
-			auto pos = Vector4(Length * RandomFloat(-1.0f, 1.0f), Height * RandomFloat(0.2f, 1.0f), Width * RandomFloat(-1.0f, 1.0f), 1.0f);
+			auto pos = Vector4(Length * RandomFloat(-1.0f, 1.0f), Height * 2.0f, Width * RandomFloat(-1.0f, 1.0f), 1.0f);
 			pos.Normalize();
 			auto vel = pos * Vector4(10.0f, 10.0f, 10.0f, 1.0f);
 			vel.w = 0.0f;
@@ -382,7 +394,6 @@ void ParticleSystem::Update(float deltaTime)
 		injectionCount = partToAdd;
 	}
 
-	// add new points if any
 	if (injectionCount > 0)
 	{
 		int injSizeX, injSizeY;
@@ -405,10 +416,8 @@ void ParticleSystem::Update(float deltaTime)
 	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &nuPtr, &counterZero);
 	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(1, 1, &nuPtr, &counterZero);
 
-	// узнаем счетчик буффера куда "перелили" частицы
+	// получаем значение счетчика
 	Game::GetInstance()->GetRenderSystem()->context->CopyStructureCount(countBuf, 0, uavDst);
-
-	// записываем значение счетчика в переменную ParticlesCount
 	D3D11_MAPPED_SUBRESOURCE subresource;
 	Game::GetInstance()->GetRenderSystem()->context->Map(countBuf, 0, D3D11_MAP_READ, 0, &subresource);
 	UINT* data = reinterpret_cast<UINT*>(subresource.pData);
@@ -416,20 +425,15 @@ void ParticleSystem::Update(float deltaTime)
 	Game::GetInstance()->GetRenderSystem()->context->Unmap(countBuf, 0);
 
 	SwapBuffers();
-}
 
-void ParticleSystem::Draw(float deltaTime)
-{
 	// draw points
 	ID3D11RasterizerState* oldState = nullptr;
 	Game::GetInstance()->GetRenderSystem()->context->RSGetState(&oldState);
 	Game::GetInstance()->GetRenderSystem()->context->RSSetState(rastState);
-
 	ID3D11BlendState* oldBlend = nullptr;
-	UINT oldMask = 0;
 	float old_blend_factor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	UINT oldMask = 0;
 	Game::GetInstance()->GetRenderSystem()->context->OMGetBlendState(&oldBlend, old_blend_factor, &oldMask);
-
 	float blend_factor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	Game::GetInstance()->GetRenderSystem()->context->OMSetBlendState(blendState, blend_factor, 0xffffffff);
 
@@ -444,10 +448,10 @@ void ParticleSystem::Draw(float deltaTime)
 	Game::GetInstance()->GetRenderSystem()->context->GSSetShader(geomShader, nullptr, 0);
 	Game::GetInstance()->GetRenderSystem()->context->PSSetShader(pixShader,  nullptr, 0);
 
-	Game::GetInstance()->GetRenderSystem()->context->GSSetConstantBuffers(0, 1, &constBuf);
-	Game::GetInstance()->GetRenderSystem()->context->GSSetShaderResources(0, 1, &srvSrc);
+	//Game::GetInstance()->GetRenderSystem()->context->ClearState();
 
-	Game::GetInstance()->GetRenderSystem()->context->CSSetShaderResources(1, 1, &srvDepth); //////
+	Game::GetInstance()->GetRenderSystem()->context->GSSetConstantBuffers(0, 1, &constBuf);
+	Game::GetInstance()->GetRenderSystem()->context->GSSetShaderResources(3, 1, &srvSrc);
 
 	Game::GetInstance()->GetRenderSystem()->context->Draw(particlesCount, 0);
 

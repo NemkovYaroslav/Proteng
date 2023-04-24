@@ -49,23 +49,32 @@ RenderSystem::RenderSystem()
 	assert(SUCCEEDED(result));
 
 	D3D11_TEXTURE2D_DESC depthTexDesc = {};
-	depthTexDesc.ArraySize = 1;
-	depthTexDesc.MipLevels = 1;
-	depthTexDesc.Format = DXGI_FORMAT_R32_TYPELESS;
-	depthTexDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-	depthTexDesc.CPUAccessFlags = 0;
-	depthTexDesc.MiscFlags = 0;
-	depthTexDesc.Usage = D3D11_USAGE_DEFAULT;
-	depthTexDesc.Width = Game::GetInstance()->GetDisplay()->GetClientWidth();
-	depthTexDesc.Height = Game::GetInstance()->GetDisplay()->GetClientHeight();
-	depthTexDesc.SampleDesc = { 1, 0 };
+	ZeroMemory(&depthTexDesc, sizeof(depthTexDesc));
+	depthTexDesc.Width            = Game::GetInstance()->GetDisplay()->GetClientWidth();
+	depthTexDesc.Height           = Game::GetInstance()->GetDisplay()->GetClientHeight();
+	depthTexDesc.MipLevels        = 1;
+	depthTexDesc.ArraySize        = 1;
+	depthTexDesc.Format           = DXGI_FORMAT_R32_TYPELESS;
+	depthTexDesc.SampleDesc.Count = 1;
+	depthTexDesc.Usage            = D3D11_USAGE_DEFAULT;
+	depthTexDesc.BindFlags        = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+	depthTexDesc.CPUAccessFlags   = 0;
+	depthTexDesc.MiscFlags        = 0;
 	result = device->CreateTexture2D(&depthTexDesc, nullptr, depthBuffer.GetAddressOf());
 	assert(SUCCEEDED(result));
 	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
-	depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
-	depthStencilDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
+	depthStencilDesc.Format             = DXGI_FORMAT_D32_FLOAT;
+	depthStencilDesc.ViewDimension      = D3D11_DSV_DIMENSION_TEXTURE2D;
 	depthStencilDesc.Texture2D.MipSlice = 0;
-	result = device->CreateDepthStencilView(depthBuffer.Get(), &depthStencilDesc, &depthView);
+	result = device->CreateDepthStencilView(depthBuffer.Get(), &depthStencilDesc, depthView.GetAddressOf());
+	assert(SUCCEEDED(result));
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDepthDesc = {};
+	srvDepthDesc.Format                    = DXGI_FORMAT_R32_FLOAT;
+	srvDepthDesc.ViewDimension             = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDepthDesc.Texture2D.MipLevels       = 1;
+	srvDepthDesc.Texture2D.MostDetailedMip = 0;
+	result = device->CreateShaderResourceView(depthBuffer.Get(), &srvDepthDesc, srvDepth.GetAddressOf());
 	assert(SUCCEEDED(result));
 
 	D3D11_BLEND_DESC BlendStateOpaqueDesc;
@@ -89,9 +98,9 @@ RenderSystem::RenderSystem()
 	device->CreateBlendState(&BlendStateLightDesc, &blendStateLight);
 
 	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
-	dsDesc.DepthEnable = TRUE;
-	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	dsDesc.DepthEnable              = TRUE;
+	dsDesc.DepthWriteMask           = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc                = D3D11_COMPARISON_LESS;
 	result = device->CreateDepthStencilState(&dsDesc, &dsOpaque);
 
 	D3D11_DEPTH_STENCIL_DESC dsDescLess = {};
@@ -141,7 +150,7 @@ RenderSystem::RenderSystem()
 
 	//TEXTURE
 	D3D11_SAMPLER_DESC samplerStateDesc = {};
-	samplerStateDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerStateDesc.Filter   = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	samplerStateDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerStateDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerStateDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;

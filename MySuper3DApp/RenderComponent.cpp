@@ -111,6 +111,8 @@ void RenderComponent::DrawOpaque()
 	Game::GetInstance()->GetRenderSystem()->context->PSSetShaderResources(0, 1, modelComponent->textureView.GetAddressOf()); 
 	Game::GetInstance()->GetRenderSystem()->context->PSSetSamplers(0, 1, Game::GetInstance()->GetRenderSystem()->samplerState.GetAddressOf());
 
+	//Game::GetInstance()->GetRenderSystem()->context->PSSetShaderResources(1, 1, Game::GetInstance()->GetRenderSystem()->srvDepth.GetAddressOf());
+
 	Game::GetInstance()->GetRenderSystem()->context->RSSetState(Game::GetInstance()->GetRenderSystem()->rastCullFront);
 	Game::GetInstance()->GetRenderSystem()->context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 

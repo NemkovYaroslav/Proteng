@@ -1,0 +1,10 @@
+﻿  ParticleSystem.cpp
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(20,13): warning C4244: 'return': conversion from 'int' to 'float', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(212,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(214,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(340,79): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(340,63): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(368,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(403,80): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(403,64): warning C4244: 'argument': conversion from 'UINT' to 'float', possible loss of data
+  MySuper3DApp.vcxproj -> C:\Users\KYKLOWOOD\Desktop\Katamari PART\x64\Debug\MySuper3DApp.exe
