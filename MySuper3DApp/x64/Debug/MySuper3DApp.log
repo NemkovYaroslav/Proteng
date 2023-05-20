@@ -1,10 +1,53 @@
-﻿  ParticleSystem.cpp
+﻿  CameraComponent.cpp
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\CameraComponent.cpp(15,63): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+  CameraControllerComponent.cpp
+  Component.cpp
+  Delegates.cpp
+  DisplayWin32.cpp
+  Game.cpp
+  GameObject.cpp
+  GBuffer.cpp
+  InputDevice.cpp
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\InputDevice.cpp(73,32): warning C4244: 'argument': conversion from 'LONG' to 'float', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\InputDevice.cpp(73,27): warning C4244: 'argument': conversion from 'LONG' to 'float', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\InputDevice.cpp(74,37): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\InputDevice.cpp(74,29): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  KatamariControllerComponent.cpp
+  KatamariDamacyGame.cpp
+  DirectionalLightComponent.cpp
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\DirectionalLightComponent.cpp(38,41): warning C4244: '=': conversion from 'float' to 'UINT', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\DirectionalLightComponent.cpp(39,42): warning C4244: '=': conversion from 'float' to 'UINT', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\DirectionalLightComponent.cpp(41,52): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\DirectionalLightComponent.cpp(57,76): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\DirectionalLightComponent.cpp(67,78): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\DirectionalLightComponent.cpp(206,7): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\DirectionalLightComponent.cpp(231,24): warning C4244: 'argument': conversion from 'unsigned __int64' to 'float', possible loss of data
+  ModelComponent.cpp
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ModelComponent.cpp(22,73): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ModelComponent.cpp(36,59): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
+  MySuper3DApp.cpp
+  ParticleSystem.cpp
 C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(20,13): warning C4244: 'return': conversion from 'int' to 'float', possible loss of data
 C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(212,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
 C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(214,20): warning C4018: '<': signed/unsigned mismatch
 C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(340,79): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(340,63): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(368,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(403,80): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(403,64): warning C4244: 'argument': conversion from 'UINT' to 'float', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(367,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(402,80): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\ParticleSystem.cpp(402,64): warning C4244: 'argument': conversion from 'UINT' to 'float', possible loss of data
+  PointLightComponent.cpp
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\PointLightComponent.cpp(38,76): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\PointLightComponent.cpp(52,62): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\PointLightComponent.cpp(131,86): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
+  RenderComponent.cpp
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\RenderComponent.cpp(130,99): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
+  RenderShadows.cpp
+  RenderShadowsComponent.cpp
+C:\Users\KYKLOWOOD\Desktop\Katamari PART\MySuper3DApp\RenderShadowsComponent.cpp(73,99): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
+  RenderSystem.cpp
+  Generating Code...
+  Compiling...
+  SimpleMath.cpp
+  TransformComponent.cpp
+  Generating Code...
   MySuper3DApp.vcxproj -> C:\Users\KYKLOWOOD\Desktop\Katamari PART\x64\Debug\MySuper3DApp.exe

@@ -39,7 +39,6 @@ GBufferData ReadGBuffer(float2 screenPos)
 }
 // DEPTH MAP
 Texture2D DepthMap : register(t2);
-
 // PARTICLE MASS FOR GS
 StructuredBuffer<Particle> renderBufSrc : register(t3); // буфер частиц
 
@@ -151,21 +150,29 @@ void CSMain
         float partDepth = partPos.z;   
         
         float2 particleUVCoord = (partPos.xy + float2(1.0f, 1.0f)) / 2;
-        particleUVCoord.y = 1.0f - particleUVCoord.y;
-        particleUVCoord.xy *= float2(1200, 1200);
-    
-        float3 Normal   = NormalMap.Load(float3(particleUVCoord.xy, 0));   // это для того, чтобы проверить передается ли GBuffer
-        float3 WorldPos = WorldPosMap.Load(float3(particleUVCoord.xy, 0)); // это для того, чтобы проверить передается ли GBuffer
-        float  depthVal = DepthMap.Load(float3(particleUVCoord.xy, 0));
-                
-        float3 temp = WorldPos.xyz - Normal.xyz; // это для того, чтобы проверить передается ли GBuffer
-        if (partDepth < depthVal)
+        particleUVCoord.y      = 1.0f - particleUVCoord.y;
+        float gBufferWidth, gBufferHeight;
+        NormalMap.GetDimensions(gBufferWidth, gBufferHeight);
+        particleUVCoord.xy    *= float2(gBufferWidth, gBufferHeight);
+        
+        float depthVal = DepthMap.Load(float3(particleUVCoord.xy, 0));   
+        
+        float4 normal = NormalMap.Load(float3(particleUVCoord.xy, 0), 1.0f);
+        if (partDepth > depthVal)
         {
-            p.Velocity *= -1;
-            p.Velocity += float4(temp.xyz, 1.0f); // это для того, чтобы проверить передается ли GBuffer
+            if ((partDepth - depthVal) <= 0.01f)
+            {
+                p.Color0 = float4(0.0f, 1.0f, 0.0f, 1.0f);
+                p.Velocity = reflect(p.Velocity, normal);
+            }
+        }
+        
+        if (p.LifeTime < 0.2)
+        {
+            p.Color0 = float4(1.0f, 0.0f, 0.0f, 1.0f);
         }
     
-        particlesBufDst.Append(p); // переливание из буфера в буфер
+        particlesBufDst.Append(p);
     }
 #endif
 }

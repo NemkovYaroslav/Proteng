@@ -223,8 +223,8 @@ void ParticleSystem::CreateBuffers()
 			pos,
 			vel,
 			Vector4(RandomFloat(0.0f, 1.0f), RandomFloat(0.0f, 1.0f), RandomFloat(0.0f, 1.0f), 1.0f),
-			Vector2(0.5f, 0.5f),
-			2.5f
+			Vector2(RandomFloat(0.1f, 0.3f), RandomFloat(0.3f, 0.5f)),
+			RandomFloat(2.0f, 5.0f)
 		};
 	}
 
@@ -346,15 +346,16 @@ void ParticleSystem::Draw(float deltaTime)
 	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &uavSrc, &counterKeepValue); // читаем частицы, сохраняем счетчик через -1 // particlesBufSrc
 	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(1, 1, &uavDst, &counterZero);      // сюда записываем поэтому ставим 0           // particlesBufDst
 
+	Game::GetInstance()->GetRenderSystem()->context->OMSetRenderTargets(0, nullptr, nullptr); ////////////////////////////////////
+
 	// GBUFFER
 	ID3D11ShaderResourceView* resources[] = {
 		Game::GetInstance()->GetRenderSystem()->gBuffer->normalSRV,
-		Game::GetInstance()->GetRenderSystem()->gBuffer->worldPositionSRV
+		Game::GetInstance()->GetRenderSystem()->gBuffer->worldPositionSRV,
+		// DEPTHMAP
+		Game::GetInstance()->GetRenderSystem()->srvDepth.Get()
 	};
-	Game::GetInstance()->GetRenderSystem()->context->CSSetShaderResources(0, 2, resources);
-	// DEPTHMAP
-
-	Game::GetInstance()->GetRenderSystem()->context->CSSetShaderResources(2, 1, Game::GetInstance()->GetRenderSystem()->srvDepth.GetAddressOf());
+	Game::GetInstance()->GetRenderSystem()->context->CSSetShaderResources(0, 3, resources);
 	
 	Game::GetInstance()->GetRenderSystem()->context->CSSetShader(ComputeShaders[ComputeFlags::SIMULATION | ComputeFlags::ADD_GRAVITY], nullptr, 0);
 
@@ -387,8 +388,8 @@ void ParticleSystem::Draw(float deltaTime)
 				pos,
 				vel,
 				Vector4(RandomFloat(0.0f, 1.0f), RandomFloat(0.0f, 1.0f), RandomFloat(0.0f, 1.0f), 1.0f),
-				Vector2(0.5f, 0.5f),
-				2.5f
+				Vector2(RandomFloat(0.1f, 0.3f), RandomFloat(0.3f, 0.5f)),
+				RandomFloat(2.0f, 5.0f)
 			};
 		}
 		injectionCount = partToAdd;
@@ -405,12 +406,18 @@ void ParticleSystem::Draw(float deltaTime)
 		Game::GetInstance()->GetRenderSystem()->context->UpdateSubresource(injectionBuf, 0, nullptr, injectionParticles, 0, 0);
 		Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &injUav, &injectionCount);
 
+		ID3D11ShaderResourceView* nullResources[] = { nullptr, nullptr, nullptr };
+		Game::GetInstance()->GetRenderSystem()->context->CSSetShaderResources(0, 3, nullResources);
+
 		Game::GetInstance()->GetRenderSystem()->context->CSSetShader(ComputeShaders[ComputeFlags::INJECTION], nullptr, 0);
 
 		Game::GetInstance()->GetRenderSystem()->context->Dispatch(injSizeX, injSizeY, 1);
 
 		injectionCount = 0;
 	}
+
+	ID3D11ShaderResourceView* nullResources[] = { nullptr, nullptr, nullptr };
+	Game::GetInstance()->GetRenderSystem()->context->CSSetShaderResources(0, 3, nullResources);
 
 	ID3D11UnorderedAccessView* nuPtr = nullptr;
 	Game::GetInstance()->GetRenderSystem()->context->CSSetUnorderedAccessViews(0, 1, &nuPtr, &counterZero);
@@ -427,6 +434,8 @@ void ParticleSystem::Draw(float deltaTime)
 	SwapBuffers();
 
 	// draw points
+	Game::GetInstance()->GetRenderSystem()->context->OMSetRenderTargets(1, Game::GetInstance()->GetRenderSystem()->renderView.GetAddressOf(), Game::GetInstance()->GetRenderSystem()->depthView.Get()); //////////
+
 	ID3D11RasterizerState* oldState = nullptr;
 	Game::GetInstance()->GetRenderSystem()->context->RSGetState(&oldState);
 	Game::GetInstance()->GetRenderSystem()->context->RSSetState(rastState);
@@ -447,8 +456,6 @@ void ParticleSystem::Draw(float deltaTime)
 	Game::GetInstance()->GetRenderSystem()->context->VSSetShader(vertShader, nullptr, 0);
 	Game::GetInstance()->GetRenderSystem()->context->GSSetShader(geomShader, nullptr, 0);
 	Game::GetInstance()->GetRenderSystem()->context->PSSetShader(pixShader,  nullptr, 0);
-
-	//Game::GetInstance()->GetRenderSystem()->context->ClearState();
 
 	Game::GetInstance()->GetRenderSystem()->context->GSSetConstantBuffers(0, 1, &constBuf);
 	Game::GetInstance()->GetRenderSystem()->context->GSSetShaderResources(3, 1, &srvSrc);

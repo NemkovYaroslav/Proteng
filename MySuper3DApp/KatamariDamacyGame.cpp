@@ -118,7 +118,7 @@ void KatamariDamacyGame::Initialize()
 		*
 		Quaternion::CreateFromAxisAngle(DirectX::SimpleMath::Vector3::Up, DirectX::XM_PI)
 	);
-	//Game::GetInstance()->AddGameObject(spider2);
+	Game::GetInstance()->AddGameObject(spider2);
 
 	GameObject* spider3 = new GameObject();
 	spider3->CreateMesh(15.0f, "../Textures/infrared.jpg", "../Models/spider.fbx");
@@ -132,7 +132,7 @@ void KatamariDamacyGame::Initialize()
 
 	GameObject* particleSystem = new GameObject();
 	//particleSystem->CreatePlane(1.0f, "../Textures/infrared.jpg");
-	particleSystem->transformComponent->SetPosition(Vector3(0.0f, 1.0f, 12.0f));
+	particleSystem->transformComponent->SetPosition(Vector3(0.0f, 0.5f, 8.0f));
 	ParticleSystem* particleSystemComponent = new ParticleSystem();
 	particleSystemComponent->Position = particleSystem->transformComponent->GetPosition();
 	particleSystem->AddComponent(particleSystemComponent);

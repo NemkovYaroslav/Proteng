@@ -24,8 +24,8 @@ public:
 	Vector3 Position;
 	float Width, Height, Length;
 
-	const unsigned int MaxParticlesCount = 512;          // максимальное количество частиц
-	const unsigned int MaxParticlesInjectionCount = 128; // максимальное количество частиц, которое можно добавить за 1 кадр, не больше 100
+	const unsigned int MaxParticlesCount = 1024;          // максимальное количество частиц
+	const unsigned int MaxParticlesInjectionCount = 256; // максимальное количество частиц, которое можно добавить за 1 кадр, не больше 100
 	UINT injectionCount = 0;                             // количество частиц, которое мы добавляем на текущем кадре
 	int particlesCount = MaxParticlesCount;              // текущее количество частиц
 
