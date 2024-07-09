@@ -1,7 +1,7 @@
 # Прототип рейндер-движка на базе DirectX 11
 
 
-![Render Example](Docs/image.png)
+![Render Example](Textures/image.png)
 
 
 ## Обзор
