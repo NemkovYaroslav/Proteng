@@ -1,4 +1,4 @@
-# Прототип рейндер-движка на базе DirectX 11
+# Прототип рендер-движка на базе DirectX 11
 
 
 ![Render Example](Textures/image.png)
