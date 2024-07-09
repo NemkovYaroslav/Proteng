@@ -1,7 +1,15 @@
-# Proteng
-Please, read the instruction.
-1.  Unpack the project to your folder (desktop, for example).
-2.  Open the project and built solution.
-4.  Open the folder of project and go to: ".../Proteng/MySuper3DApp/misc/ASSIMP/..."
-5.  Copy file "assimp-vc143-mtd" and paste it to: ".../Proteng/x64/Debug/..."
-6.  Now you are ready to run the solution (in debug mode)!
+# Прототип рейндер-движка на базе DirectX 11
+Данный проект является прототипом, реализующий основные составляющие отрисовки:
+1.  Затенение по Фонгу (Phong Shading).
+2.  Каскадные карты теней (Cascade Shadow Mapping).
+3.  Прямой и отложенный рендеринг (Forward/Deferred Shading).
+4.  Система частиц (Partcile System).
+
+
+# Запуск
+Пожалуйста, прочтите руководство по запуску:
+1.  Распакуйте файлы проекта (на рабочий стол, например).
+2.  Откройте файл проекта и соберите решение (пока поддерживается только х64, в режиме отладки).
+3.  Откройте расположения проекта и проследуйте по пути: ".../Proteng/MySuper3DApp/misc/ASSIMP/...".
+4.  Скопируйте файл "assimp-vc143-mtd" и вставьте его по пути: ".../Proteng/x64/Debug/...".
+5.  Теперь вы можете запустить проект (пока поддреживается только х64, в режиме отладки).
