@@ -4,9 +4,10 @@
 Данный проект является прототипом, реализующий основные составляющие отрисовки:
 1.  Затенение по Фонгу (Phong Shading).
 2.  Каскадные карты теней (Cascade Shadow Mapping).
-3.  Прямой и отложенный рендеринг (Forward/Deferred Shading).
+3.  Прямой и отложенный рендеринг (Forward/Deferred Rendering).
 4.  Система частиц (Partcile System).
 
+![Render Example](Docs/image.png)
 
 ## Запуск
 Пожалуйста, прочтите руководство по запуску:
